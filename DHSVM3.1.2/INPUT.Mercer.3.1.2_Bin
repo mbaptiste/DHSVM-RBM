@@ -40,7 +40,7 @@ PRISM                = FALSE              # TRUE or FALSE
 PRISM data path      =                    # path for PRISM files
 PRISM data extension = bin                # file extension for PRISM files
 Canopy radiation attenuation mode = FIXED # FIXED or VARIABLE
-Shading              = TRUE    	       # TRUE or FALSE
+Shading              = FALSE    	       # TRUE or FALSE
 Shading data path    = ../input/Shadow
 Shading data extension = nc               # file extension for shading files 
 Skyview data path    = ../input/SkyView.bin
@@ -54,7 +54,7 @@ Precipitation lapse rate = CONSTANT       # CONSTANT, MAP, or VARIABLE
 Cressman radius      = 10                 # in model pixels
 Cressman stations    =  4                 # number of stations
 Stream Temperature   = TRUE               # TRUE or FALSE
-Canopy Shading       = TRUE
+Canopy Shading       = FALSE
 
 ################################################################################
 # MODEL AREA SECTION
@@ -99,13 +99,13 @@ Precipitation Lapse Rate =  0.0001        # Precipitation lapse rate (m/m)
 Precipitation Multiplier = 0.
 
 ####################Only if CanopyShading is TRUE###############################  
-Tree Height = 10
-Buffer Width = 5
-Overhang Coefficient = 0                  
+Tree Height = 
+Buffer Width = 
+Overhang Coefficient =                   
 Monthly Extinction Coefficient = 0. 0. 0.08 0.08 0.08 0.08 0.08 0.08 0.08 0.08 0. 0.            
                                           # extinction coefficient (0 ~ 1)
-Canopy Bank Distance = 0.01               # distance from bank to canopy (m)
-
+Canopy Bank Distance =                    # distance from bank to canopy (m)
+   
 ################################################################################
 # TERRAIN INFORMATION SECTION
 ################################################################################
@@ -544,6 +544,7 @@ Rpc                      7 = .108 .108
 Overstory Monthly Alb    7 = 0.27 0.27 0.25 0.25 0.22 0.21 0.21 0.21 0.21 0.22 0.24 0.26
 Understory Monthly Alb   7 = 0.175 0.175 0.175 0.175 0.175 0.175 0.175 0.175 0.175 0.175 0.175 0.175
 Number of Root Zones     7 = 3 		   
+
 Root Zone Depths         7 = 0.10 0.25 0.40   
 Overstory Root Fraction  7 = 0.20 0.40 0.40      
 Understory Root Fraction 7 = 0.40 0.60 0.00      
