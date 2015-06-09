@@ -56,7 +56,7 @@ LIBS = -lm -L/usr/X11R6/lib -lX11 -L/sw/lib -L/usr/local/lib
 #LIBS = -lm -L/usr/X11R6/lib -lX11 -L/sw/lib -L/usr/local/lib -lnetcdf
 
 DHSVM: $(OBJS)
-	$(CC) $(OBJS) $(CFLAGS) -o DHSVM_RBM $(LIBS)
+	$(CC) $(OBJS) $(CFLAGS) -o DHSVM3.1.2 $(LIBS)
 
 clean::
 	rm -f DHSVM
