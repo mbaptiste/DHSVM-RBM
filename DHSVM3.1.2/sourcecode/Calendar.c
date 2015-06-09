@@ -254,7 +254,7 @@ void SPrintDate(DATE * Day, char *buffer)
 /*****************************************************************************
   IsNewMonth()
 *****************************************************************************/
-uchar IsNewMonth(DATE * Now, int Interval)
+uchar IsNewMonth(DATE *Now, int Interval)
 {
   int Year;
   int Month;

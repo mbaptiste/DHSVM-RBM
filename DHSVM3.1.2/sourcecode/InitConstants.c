@@ -530,34 +530,4 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
 
   if (!CopyFloat(&PRECIPMULTIPLIER, StrEnv[precip_multiplier].VarStr, 1))
       ReportError(StrEnv[precip_multiplier].KeyName, 51);
-  /* assign values to riparian vegetations */
-  if (Options->StreamTemp && Options->CanopyShading) {
-	if (!CopyFloat(&TREEHEIGHT, StrEnv[tree_height].VarStr, 1))
-	  ReportError(StrEnv[tree_height].KeyName, 51);
-	if (!CopyFloat(&BUFFERWIDTH, StrEnv[buffer_width].VarStr, 1))
-	  ReportError(StrEnv[buffer_width].KeyName, 51);
-	if (!CopyFloat(&OvhCoeff, StrEnv[ovh].VarStr, 1))
-	  ReportError(StrEnv[ovh].KeyName, 51);
-	if (!CopyFloat(ExtnCoeff, StrEnv[extn].VarStr, 12))
-	  ReportError(StrEnv[extn].KeyName, 51);
-	if (!CopyFloat(&CanopyBankDist, StrEnv[canopy_bank_dist].VarStr, 1))
-	  ReportError(StrEnv[canopy_bank_dist].KeyName, 51);
-
-	printf("Calculate canopy shading effect on stream temperature: \n");
-	printf("Tree Height = %.1f\n", TREEHEIGHT);
-	printf("Buffer Width = %.1f\n", BUFFERWIDTH); 
-	printf("Monthly Extinction Coefficient = \n");
-	for (i = 0; i < 12; i++)
-	  printf("%.3f ", ExtnCoeff[i]);
-	printf("\n");
-	printf("Bank to Canopy Distance = %.3f\n\n\n", CanopyBankDist);
-  }
-  else {
-	TREEHEIGHT = NOT_APPLICABLE;
-	BUFFERWIDTH = NOT_APPLICABLE;
-	OvhCoeff = NOT_APPLICABLE;
-	for (i = 0; i < 12; i++)
-	  ExtnCoeff[i] = NOT_APPLICABLE;
-	CanopyBankDist = NOT_APPLICABLE;
-  }
 }

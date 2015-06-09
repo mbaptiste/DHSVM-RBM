@@ -37,9 +37,3 @@ float DEBRISd50;
 float DEBRISd90;
 float CHANNELd50;
 float CHANNELd90;
-float TREEHEIGHT;
-float BUFFERWIDTH;          /* The width of canopy buffer */
-float OvhCoeff;             /* A percentage of tree height thats used to represent overhanging canopy */
-float ExtnCoeff[12];        /* Monthly Extinction coefficient */
-float Extn;
-float CanopyBankDist;       /* Distance from bank to canopy */

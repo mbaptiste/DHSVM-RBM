@@ -27,7 +27,7 @@
    Reads stream and road files and builds the networks.
    -------------------------------------------------------------------------- */
 void
-InitChannel(LISTPTR Input, MAPSIZE * Map, int deltat, CHANNEL * channel,
+InitChannel(LISTPTR Input, MAPSIZE *Map, int deltat, CHANNEL *channel,
 	    SOILPIX ** SoilMap, int *MaxStreamID, int *MaxRoadID, OPTIONSTRUCT *Options)
 {
   int i;
@@ -35,6 +35,7 @@ InitChannel(LISTPTR Input, MAPSIZE * Map, int deltat, CHANNEL * channel,
     {"ROUTING", "STREAM NETWORK FILE", "", ""},
     {"ROUTING", "STREAM MAP FILE", "", ""},
     {"ROUTING", "STREAM CLASS FILE", "", ""},
+	{"ROUTING", "RIPARIAN VEG FILE", "", ""},
     {"ROUTING", "ROAD NETWORK FILE", "", "none"},
     {"ROUTING", "ROAD MAP FILE", "", "none"},
     {"ROUTING", "ROAD CLASS FILE", "", "none"},
@@ -83,6 +84,13 @@ InitChannel(LISTPTR Input, MAPSIZE * Map, int deltat, CHANNEL * channel,
     error_handler(ERRHDL_STATUS,
 		  "InitChannel: computing stream network routing coefficients");
     channel_routing_parameters(channel->streams, (double) deltat);
+  }
+
+  if (Options->StreamTemp) {
+	if (strncmp(StrEnv[riparian_veg].VarStr, "none", 4)) {
+	  printf("\tReading channel riparian vegetation params\n");
+	  channel_read_rveg_param(channel->streams, StrEnv[riparian_veg].VarStr, MaxStreamID);
+	}
   }
 
   if (strncmp(StrEnv[road_class].VarStr, "none", 4)) {

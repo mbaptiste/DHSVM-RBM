@@ -26,6 +26,7 @@
 #include <string.h>
 #include <math.h>
 #include <errno.h>
+#include "Calendar.h"
 #include "errorhandler.h"
 #include "channel.h"
 #include "channel_grid.h"
@@ -33,12 +34,28 @@
 #include "constants.h"
 #include "tableio.h"
 #include "settings.h"
-   
+  
+/*****************************************************************************
+  Function name: InitChannelRVeg()
+  Purpose:	 This subroutine initiates the riparian extinction parameter for
+             each channel segment
+*****************************************************************************/
+void InitChannelRVeg(TIMESTRUCT *Time, Channel *Head) 
+{
+	if (Head != NULL) { 
+	  Channel *Current = NULL;
+	  Current = Head;
+	  while (Current) {
+		Current->rveg.Extn = Current->rveg.ExtnCoeff[Time->Current.Month - 1];
+		Current = Current->next;
+	  }
+	}
+}
 /*****************************************************************************
   Function name: CalcCanopyShading()
   Purpose:	 This subroutine calculates the shadow length
 *****************************************************************************/
-void CalcCanopyShading(Channel *Channel, SOLARGEOMETRY *SolarGeo) 
+void CalcCanopyShading(TIMESTRUCT *Time, Channel *Channel, SOLARGEOMETRY *SolarGeo) 
 {
 	float Dx1 = 0., Dx2 = 0.;              /* shadow length (in meters) */
 	float SolarAltitude = 0.;   /* in radians */
@@ -53,7 +70,17 @@ void CalcCanopyShading(Channel *Channel, SOLARGEOMETRY *SolarGeo)
 	/* compute solar altitude in radians */
 	SolarAltitude = asin(SolarGeo->SineSolarAltitude);
 	
-	while (Channel) {  
+	while (Channel) {
+	  if (IsNewMonth(&(Time->Current), Time->Dt))
+		 Channel->rveg.Extn = Channel->rveg.ExtnCoeff[Time->Current.Month - 1];
+
+	  /* debug */
+	  /*if (Time->Current.Month == 2) {
+		 printf("Month[%d]-seg[%d]: %f\t%f\n", Time->Current.Month, Channel->id, Channel->rveg.Extn, Channel->rveg.BUFFERWIDTH);
+	  }*/
+	  /* debug ends */
+
+
 	  /* compute stream azimuth in radians */
 	  StreamAzimuth = Channel->azimuth*PI/180.;
 
@@ -61,53 +88,58 @@ void CalcCanopyShading(Channel *Channel, SOLARGEOMETRY *SolarGeo)
 		 elevation of stream surface. its assumed that the distance from
 		 the bank to the stream is 0.25 * bankheight */
 	  // HDEM = 0.25*Channel->class2->bank_height + TREEHEIGHT;
-	  HDEM = TREEHEIGHT;
+	  HDEM = Channel->rveg.TREEHEIGHT;
 
 	  /* if a vegetation polygon on the sunward bank is located very close 
 	  to the stream, the overhanging canopy righ above the stream surface 
 	  may exist and contribute shade.
 	  The horizontal width of the protruding portion of the canopy toward
 	  the stream is assumed to be a percentage of the tree height. */
-	  BUFFERWIDTH += TREEHEIGHT * OvhCoeff;
+	  Channel->rveg.BUFFERWIDTH += Channel->rveg.TREEHEIGHT * Channel->rveg.OvhCoeff;
 
 	  /* compute the shadow length on the stream */
 	  if (SolarAltitude > 0){
 		/* Examine six (6) cases based on the shadow length, 
 		canopy bank distance and buffer width */
 	    Dx1 = HDEM * fabs(sin(SolarGeo->SolarAzimuth - StreamAzimuth)/tan(SolarAltitude))
-			-(CanopyBankDist+Channel->class2->width);
+			-(Channel->rveg.CanopyBankDist+Channel->class2->width);
 		Dx2 = HDEM * fabs(sin(SolarGeo->SolarAzimuth - StreamAzimuth)/tan(SolarAltitude))
-			-CanopyBankDist;
+			-Channel->rveg.CanopyBankDist;
 		
 		/* Case 1 - No shade */
-		if (Dx2 <= 0.0 || Extn == 0)
+		if (Dx2 <= 0.0 || Channel->rveg.Extn == 0)
           ShadeCase = 1;
 	    /* Case 2 - Partial shade, sun above buffer */
-	    else if (Dx1 <= 0.0 && Dx2 <= BUFFERWIDTH) 
+	    else if (Dx1 <= 0.0 && Dx2 <= Channel->rveg.BUFFERWIDTH) 
           ShadeCase = 2;
 	    /*Case 3 - Partial shade, sun below buffer */
-	    else if (Dx1 <= 0.0 &&  Dx2 > BUFFERWIDTH) 
+	    else if (Dx1 <= 0.0 &&  Dx2 > Channel->rveg.BUFFERWIDTH) 
           ShadeCase = 3;
 	    /* Case 4 - Full shade, sun above buffer */
-	    else if (Dx1 > 0.0 && Dx2 <= BUFFERWIDTH) 
+	    else if (Dx1 > 0.0 && Dx2 <= Channel->rveg.BUFFERWIDTH) 
           ShadeCase = 4;
 	    /* Case 5 - Full shade, sun partially below buffer */
-	    else if (Dx1 > 0.0 && Dx1 <= BUFFERWIDTH && Dx2 > BUFFERWIDTH)
+	    else if (Dx1 > 0.0 && Dx1 <= Channel->rveg.BUFFERWIDTH && Dx2 > Channel->rveg.BUFFERWIDTH)
           ShadeCase = 5;
 	    /* Case 6 - Full shade, sun entirely below buffer */
-	    else if (Dx1 > BUFFERWIDTH && Dx2 > BUFFERWIDTH) 
+	    else if (Dx1 > Channel->rveg.BUFFERWIDTH && Dx2 > Channel->rveg.BUFFERWIDTH) 
           ShadeCase = 6;
 
 		if (ShadeCase > 1) 
 	      /* calculate the effective shade density */
 	      Net_Shade_Fctr = CalcShadeDensity(ShadeCase, HDEM, Channel->class2->width,
 					  SolarGeo->SolarAzimuth, StreamAzimuth, SolarAltitude, 
-					  TREEHEIGHT, BUFFERWIDTH, Dx1, Dx2, Extn);
+					  Channel->rveg.TREEHEIGHT, Channel->rveg.BUFFERWIDTH, Dx1, Dx2, Channel->rveg.Extn);
 		else Net_Shade_Fctr = 0.;
 		if (Net_Shade_Fctr > 1) {
 		  printf("The shading density > 1! must be <=0\n");
 		  exit(0);
 		}
+
+		/* debug */
+		/* if (Channel->rveg.Extn > 0.)
+			printf("[%d]\t%f\t(Extn=%f)\n", Channel->id, Net_Shade_Fctr, Channel->rveg.Extn); */
+		/* debug ends */
 
 	    /* VEGSHD + OVHSHD is then divided by the stream surface width to 
 	    approximate the fraction of stream surface covered by the composite shade. 
@@ -120,7 +152,7 @@ void CalcCanopyShading(Channel *Channel, SOLARGEOMETRY *SolarGeo)
 
 	  /* compute shading effect on diffusive radiation */
 	  if (HDEM > 0) {
-	    SKOP = CalcCanopySkyView(HDEM);
+		SKOP = CalcCanopySkyView(HDEM, Channel->rveg.CanopyBankDist);
 		Channel->Diffuse *= MIN(Channel->skyview, SKOP);
 	    /* compute long-wave radiation */
 	  }
@@ -194,13 +226,13 @@ float CalcShadeDensity(int ShadeCase, float HDEM, float WStream,
   Purpose:	 This subroutine calculates the skyview factor above the riparaian 
              vegetation
 ******************************************************************************/
-float CalcCanopySkyView(float HDEM) 
+float CalcCanopySkyView(float HDEM, float dist) 
 {
 	float VSA;  /* vegetation shade angle (degrees) */
 	float SKOP; /* sky openess (ranges from 0 ~ 1) */
 
 	/* compute the vegeation shade angle in degrees */
-	VSA = atan2(HDEM, CanopyBankDist)*180./PI;
+	VSA = atan2(HDEM, dist)*180./PI;
 
 	/* assume the vegetation zone on both side of the bank have
 	the same height and distance to the bank */

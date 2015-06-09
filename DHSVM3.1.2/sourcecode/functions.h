@@ -33,7 +33,7 @@ void CalcAerodynamic(int NVegLayers, unsigned char OverStory,
 		     float n, float *Height, float Trunk, float *U,
 		     float *U2mSnow, float *Ra, float *RaSnow);
 
-float CalcBagnold(float DS,TIMESTRUCT * Time, float, float, float, float);
+float CalcBagnold(float DS, TIMESTRUCT *Time, float, float, float, float);
 
 double CalcDistance(COORD *LocA, COORD *LocB);
 
@@ -119,6 +119,8 @@ void GetMetData(OPTIONSTRUCT *Options, TIMESTRUCT *Time, int NSoilLayers,
 uchar InArea(MAPSIZE *Map, COORD *Loc);
 
 void InitAggregated(int MaxVegLayers, int MaxSoilLayers, AGGREGATED *Total);
+
+void InitChannelRVeg(TIMESTRUCT *Time, Channel *Channel); 
 
 int InitChannelSediment(Channel * Head, AGGREGATED *Total);
 
@@ -424,13 +426,13 @@ void StoreModelState(char *Path, DATE * Current, MAPSIZE * Map,
 float viscosity(float Tair, float Rh);
 
 /* functions for John's RBM model */
-int channel_save_outflow_text_cplmt(TIMESTRUCT *Time, char *tstring, Channel * net, CHANNEL *netfile, int flag);
-void CalcCanopyShading (Channel *Channel, SOLARGEOMETRY *SolarGeo);
+int channel_save_outflow_text_cplmt(TIMESTRUCT *Time, char *tstring, Channel *net, CHANNEL *netfile, int flag);
+void CalcCanopyShading (TIMESTRUCT *Time, Channel *Channel, SOLARGEOMETRY *SolarGeo);
 
 float CalcShadeDensity(int ShadeCase, float HDEM, float WStream, 
 					  float SunAzimuth, float StreamAzim, float SunAltitude, float TREEHEIGHT,
 					  float BUFFERWIDTH, float Dx1, float Dx2, float Ext_Coeff);
 
-float CalcCanopySkyView(float HDEM);
+float CalcCanopySkyView(float HDEM, float dist);
 
 #endif

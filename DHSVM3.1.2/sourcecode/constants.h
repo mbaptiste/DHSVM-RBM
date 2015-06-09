@@ -125,11 +125,4 @@ extern float DEBRISd90;          		/* (mm) */
 extern float CHANNELd50;         		/* Currently not used */
 extern float CHANNELd90;         		/* Currently not used */
 
-/* riparian vegetation parameters */
-extern float TREEHEIGHT;
-extern float BUFFERWIDTH;
-extern float OvhCoeff;
-extern float Extn;
-extern float ExtnCoeff[12];
-extern float CanopyBankDist;
 #endif

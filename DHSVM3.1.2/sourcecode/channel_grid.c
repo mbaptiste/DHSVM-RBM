@@ -421,7 +421,7 @@ void channel_grid_free_map(ChannelMapPtr ** map)
 /* -------------------------------------------------------------
    channel_grid_read_map
    ------------------------------------------------------------- */
-ChannelMapPtr **channel_grid_read_map(Channel * net, const char *file,
+ChannelMapPtr **channel_grid_read_map(Channel *net, const char *file,
 				      SOILPIX ** SoilMap)
 {
   ChannelMapPtr **map;

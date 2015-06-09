@@ -157,7 +157,7 @@ enum KEYS {
   demfile = 0, maskfile,
   soiltype_file = 0, soildepth_file,
   /* DHSVM channel keys */
-  stream_network = 0, stream_map, stream_class,
+  stream_network = 0, stream_map, stream_class, riparian_veg,
   road_network, road_map, road_class,
   /* number of each type of output */
   output_path =

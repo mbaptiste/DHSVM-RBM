@@ -91,8 +91,8 @@ int main(int argc, char **argv)
     { 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},							/*FINEPIX */
     0.0, 0.0, 0.0, 0.0, 0.0, 0l, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
   };
-  CHANNEL ChannelData = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
-  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+  CHANNEL ChannelData = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
   NULL, NULL, NULL, NULL};
   DUMPSTRUCT Dump;
@@ -220,6 +220,8 @@ int main(int argc, char **argv)
   if (Options.HasNetwork == TRUE) {
     InitChannelDump(&Options, &ChannelData, Dump.Path);
     ReadChannelState(Dump.InitStatePath, &(Time.Start), ChannelData.streams);
+	if (Options.StreamTemp && Options.CanopyShading)
+	  InitChannelRVeg(&Time, ChannelData.streams);
   }
 
   InitSnowMap(&Map, &SnowMap);
@@ -385,7 +387,7 @@ int main(int argc, char **argv)
 	if (Options.StreamTemp) {
 	  channel_grid_avg(ChannelData.streams);
       if (Options.CanopyShading)
-	    CalcCanopyShading(ChannelData.streams, &SolarGeo);
+	    CalcCanopyShading(&Time, ChannelData.streams, &SolarGeo);
 	}
 
  #ifndef SNOW_ONLY

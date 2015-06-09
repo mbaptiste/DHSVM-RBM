@@ -74,6 +74,19 @@ typedef struct {
 } CHANSED;
 
 /* -------------------------------------------------------------
+   structure for storing the channel riparian vegetation information
+   (used only if stream temperature is set true)
+   ------------------------------------------------------------- */
+typedef struct {
+	float TREEHEIGHT;
+	float BUFFERWIDTH;          /* The width of canopy buffer */
+	float OvhCoeff;             /* A percentage of tree height thats used to represent overhanging canopy */
+	float ExtnCoeff[12];        /* Monthly Extinction coefficient */
+	float Extn;
+	float CanopyBankDist;       /* Distance from bank to canopy */
+} CHANRVEG;
+
+/* -------------------------------------------------------------
    struct Channel
    This is the basic unit of channel information.
    ------------------------------------------------------------- */
@@ -111,10 +124,10 @@ struct _channel_rec_ {
   float skyview;
   int Ncells;	        /* Number of grid cells crossed by the segment*/
 
-  CHANSED sediment;            /* sediment sub-structure */
+  CHANSED sediment;     /* sediment sub-structure */
+  CHANRVEG rveg;        /* riparian veg sub-structure */
 
   struct _channel_rec_ *outlet;	/* NULL if does not drain to another segment */
-
   struct _channel_rec_ *next;
 };
 typedef struct _channel_rec_ Channel, *ChannelPtr;
@@ -131,6 +144,7 @@ void channel_free_classes(ChannelClass * head);
 				/* Channel */
 
 Channel *channel_read_network(const char *file, ChannelClass * class_list, int *MaxID);
+int *channel_read_rveg_param(Channel *net, const char *file, int *MaxID);
 void channel_routing_parameters(Channel * net, int deltat);
 Channel *channel_find_segment(Channel * net, SegmentID id);
 int channel_step_initialize_network(Channel * net);

@@ -481,7 +481,7 @@ void channel_routing_parameters(Channel * network, int deltat)
 /* -------------------------------------------------------------
    channel_read_network
    ------------------------------------------------------------- */
-Channel *channel_read_network(const char *file, ChannelClass * class_list, int *MaxID)
+Channel *channel_read_network(const char *file, ChannelClass *class_list, int *MaxID)
 {
   Channel *head = NULL, *current = NULL;
   int err = 0;
@@ -730,7 +730,7 @@ int channel_route_network(Channel * net, int deltat)
 /* -------------------------------------------------------------
    channel_step_initialize_network
    ------------------------------------------------------------- */
-int channel_step_initialize_network(Channel * net)
+int channel_step_initialize_network(Channel *net)
 {
   if (net != NULL) {
     net->last_inflow = net->inflow;
@@ -994,7 +994,7 @@ int main(int argc, char **argv)
    Saves the channel sediment outflow using a text string as the time field
    ------------------------------------------------------------- */
 int
-channel_save_sed_outflow_text(char *tstring, Channel * net, FILE * out,
+channel_save_sed_outflow_text(char *tstring, Channel *net, FILE * out,
 			  FILE * out2, int flag)
 {
   int err = 0;
@@ -1110,3 +1110,260 @@ channel_save_sed_inflow_text(char *tstring, Channel * net, FILE * out,
   return (err);
 }
 
+/* -------------------------------------------------------------
+   channel_read_rveg_param
+   ------------------------------------------------------------- */
+int *channel_read_rveg_param(Channel *head, const char *file, int *MaxID)
+{
+  Channel *current = NULL;
+  int err = 0;
+  int done;
+  static const int fields = 17;
+  static TableField rveg_fields[17] = {
+    {"ID", TABLE_INTEGER, TRUE, FALSE, {0}, "", NULL},
+    {"Height", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+	{"BufferWidth", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+    {"ExtnCoeff1", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+	{"ExtnCoeff2", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+	{"ExtnCoeff3", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+	{"ExtnCoeff4", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+	{"ExtnCoeff5", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+	{"ExtnCoeff6", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+	{"ExtnCoeff7", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+	{"ExtnCoeff8", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+	{"ExtnCoeff9", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+	{"ExtnCoeff10", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+	{"ExtnCoeff11", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+	{"ExtnCoeff12", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+    {"Dist", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+	{"Overhang", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
+  };
+
+  error_handler(ERRHDL_STATUS,
+		"channel_read_rveg_param: reading file \"%s\"", file);
+
+  if (table_open(file) != 0) {
+    error_handler(ERRHDL_ERROR,
+		  "channel_read_rveg_param: unable to open file \"%s\": %s",
+		  file, strerror(errno));
+    return NULL;
+  }
+
+  *MaxID = 0;
+  done = FALSE;
+  while (!done) {
+    int i;
+    done = (table_get_fields(fields, rveg_fields) < 0);
+    if (done) {
+      for (i = 0; i < fields; i++) {
+		if (rveg_fields[i].read)
+		  break;
+	  }
+      if (i >= fields)
+		continue;
+    }
+
+	if (current == NULL) {
+      current = head;
+    }
+    else {
+      current = current->next;
+    }
+
+    for (i = 0; i < fields; i++) {
+      if (rveg_fields[i].read) {
+		switch (i) {
+		case 0:
+		  current->id = rveg_fields[i].value.integer;
+		  if (current->id > *MaxID) 
+			*MaxID = current->id;
+		  if (current->id <= 0) {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: channel id invalid",
+			  file, current->id);
+			err++;
+		  }
+		break;
+		case 1:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.TREEHEIGHT = rveg_fields[i].value.real;
+		  }
+		  else {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: tree height (%f) invalid",
+				file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+	    case 2:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.BUFFERWIDTH = rveg_fields[i].value.real;
+		  }
+		  else {
+	        error_handler(ERRHDL_ERROR, "%s: segment %d: buffer width (%f) invalid",
+			  file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+		case 3:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.ExtnCoeff[0] = rveg_fields[i].value.real;
+		  }
+		  else {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: extinction coeff in month[1] (%f) invalid",
+			  file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+		case 4:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.ExtnCoeff[1] = rveg_fields[i].value.real;
+		  }
+		  else {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: extinction coeff in month[2] (%f) invalid",
+			  file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+		case 5:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.ExtnCoeff[2] = rveg_fields[i].value.real;
+		  }
+		  else {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: extinction coeff in month[3] (%f) invalid",
+			  file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+		case 6:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.ExtnCoeff[3] = rveg_fields[i].value.real;
+		  }
+		  else {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: extinction coeff in month[4] (%f) invalid",
+			  file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+		case 7:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.ExtnCoeff[4] = rveg_fields[i].value.real;
+		  }
+		  else {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: extinction coeff in month[5] (%f) invalid",
+			  file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+		case 8:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.ExtnCoeff[5] = rveg_fields[i].value.real;
+		  }
+		  else {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: extinction coeff in month[6] (%f) invalid",
+			  file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+		case 9:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.ExtnCoeff[6] = rveg_fields[i].value.real;
+		  }
+		  else {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: extinction coeff in month[7] (%f) invalid",
+			  file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+		case 10:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.ExtnCoeff[7] = rveg_fields[i].value.real;
+		  }
+		  else {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: extinction coeff in month[8] (%f) invalid",
+			  file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+		case 11:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.ExtnCoeff[8] = rveg_fields[i].value.real;
+		  }
+		  else {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: extinction coeff in month[9] (%f) invalid",
+			  file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+		case 12:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.ExtnCoeff[9] = rveg_fields[i].value.real;
+		  }
+		  else {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: extinction coeff in month[10] (%f) invalid",
+			  file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+		case 13:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.ExtnCoeff[10] = rveg_fields[i].value.real;
+		  }
+		  else {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: extinction coeff in month[11] (%f) invalid",
+			  file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+		case 14:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.ExtnCoeff[11] = rveg_fields[i].value.real;
+		  }
+		  else {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: extinction coeff in month[12] (%f) invalid",
+			  file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+		case 15:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.CanopyBankDist = rveg_fields[i].value.real;
+		  }
+		  else {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: distance to bank (%f) invalid",
+			  file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+		case 16:
+		  if (rveg_fields[i].value.real >= 0) {
+			current->rveg.OvhCoeff = rveg_fields[i].value.real;
+		  }
+		  else {
+			error_handler(ERRHDL_ERROR, "%s: segment %d: overhanging coeff (%f) invalid",
+			  file, current->id, rveg_fields[i].value.real);
+			err++;
+		  }
+	    break;
+	  default:
+		error_handler(ERRHDL_FATAL, "channel_read_rveg_param: what is this field %d?", i);
+	  break;
+      }
+      }
+    }
+  }
+
+  table_close();
+  table_errors += err;
+
+  error_handler(ERRHDL_STATUS,
+		"channel_read_rveg_param: %s: %d errors, %d warnings",
+		file, table_errors, table_warnings);
+
+  if (table_errors) {
+    error_handler(ERRHDL_ERROR,
+		  "channel_read_rveg_param: %s: too many errors", file);
+    channel_free_network(current);
+    current = NULL;
+  }
+
+  return (0);
+}
