@@ -53,13 +53,15 @@ void ResetAggregate(LAYER * Soil, LAYER * Veg, AGGREGATED * Total,
     Total->Precip.IntSnow[i] = 0.0;
   }
 
+  /* initiate met data */
+  Total->Met.air_temp = 0.0;
+
   /* initialize radiation data */
   for (i = 0; i < Veg->MaxLayers + 1; i++) {
     Total->Rad.NetShort[i] = 0.0;
     Total->Rad.LongIn[i] = 0.0;
     Total->Rad.LongOut[i] = 0.0;
   }
-  Total->Rad.PixelNetShort = 0.0;
   Total->Rad.PixelLongIn = 0.0;
   Total->Rad.PixelLongOut = 0.0;
 
@@ -98,6 +100,7 @@ void ResetAggregate(LAYER * Soil, LAYER * Veg, AGGREGATED * Total,
   Total->Soil.SatFlow = 0.0;
   Total->Soil.TSurf = 0.0;
   Total->Soil.Qnet = 0.0;
+  Total->Soil.MeltEnergy = 0.0;
   Total->Soil.Qs = 0.0;
   Total->Soil.Qe = 0.0;
   Total->Soil.Qg = 0.0;

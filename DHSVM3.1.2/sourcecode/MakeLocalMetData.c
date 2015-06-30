@@ -55,29 +55,28 @@
                Handbook of hydrology,  1993, McGraw-Hill, New York, etc..
 *****************************************************************************/
 PIXMET MakeLocalMetData(int y, int x, MAPSIZE * Map, int DayStep,
-			OPTIONSTRUCT * Options, int NStats,
-			METLOCATION * Stat, uchar * MetWeights,
-			float LocalElev, RADCLASSPIX * RadMap,
-			PRECIPPIX * PrecipMap, MAPSIZE * Radar,
-			RADARPIX ** RadarMap, float **PrismMap,
-			SNOWPIX * LocalSnow, SNOWTABLE * SnowAlbedo,
+			OPTIONSTRUCT *Options, int NStats,
+			METLOCATION *Stat, uchar *MetWeights,
+			float LocalElev, RADCLASSPIX *RadMap,
+			PRECIPPIX *PrecipMap, MAPSIZE *Radar,
+			RADARPIX **RadarMap, float **PrismMap,
+			SNOWPIX *LocalSnow, SNOWTABLE *SnowAlbedo,
 			float ***MM5Input, float ***WindModel,
-			float **PrecipLapseMap, MET_MAP_PIX *** MetMap,
-			int NGraphics, int Month, float skyview,
-			unsigned char shadow, float SunMax,
-			float SineSolarAltitude)
+			float **PrecipLapseMap, MET_MAP_PIX ***MetMap,
+			int Month, float skyview, unsigned char shadow, 
+			float SunMax, float SineSolarAltitude)
 {
   float CurrentWeight;		/* weight for current station */
   float ScaleWind = 1;		/* Wind to be scaled by model factors if 
-				   WindSource == MODEL */
-  float Temp;			/* Temporary variable */
-  float WeightSum;		/* sum of the weights */
-  int i;			/* counter */
-  int RadarX;			/* X coordinate of radar map coordinate */
-  int RadarY;			/* Y coordinate of radar map coordinate */
+				               WindSource == MODEL */
+  float Temp;				/* Temporary variable */
+  float WeightSum;			/* sum of the weights */
+  int i;					/* counter */
+  int RadarX;				/* X coordinate of radar map coordinate */
+  int RadarY;				/* Y coordinate of radar map coordinate */
   float TempLapseRate;
   int WindDirection = 0;	/* Direction of model wind */
-  PIXMET LocalMet;		/* local met data */
+  PIXMET LocalMet;			/* local met data */
 
   LocalMet.Tair = 0.0;
   LocalMet.Rh = 0.0;
@@ -316,14 +315,13 @@ PIXMET MakeLocalMetData(int y, int x, MAPSIZE * Map, int DayStep,
   }
   else
     LocalSnow->LastSnow = 0;
-
-  if (NGraphics > 0) {
-    (*MetMap)[y][x].accum_precip =
-    (*MetMap)[y][x].accum_precip + PrecipMap->Precip;
-    (*MetMap)[y][x].air_temp = LocalMet.Tair;
-    (*MetMap)[y][x].wind_speed = LocalMet.Wind;
-    (*MetMap)[y][x].humidity = LocalMet.Rh;
-  }
+  
+  (*MetMap)[y][x].accum_precip += PrecipMap->Precip;
+  (*MetMap)[y][x].air_temp = LocalMet.Tair;
+  (*MetMap)[y][x].wind_speed = LocalMet.Wind;
+  (*MetMap)[y][x].humidity = LocalMet.Rh;
+  (*MetMap)[y][x].air_dens = LocalMet.AirDens;
+  (*MetMap)[y][x].Lv = LocalMet.Lv;
 
   return LocalMet;
 }

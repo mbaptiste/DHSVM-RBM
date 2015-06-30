@@ -53,9 +53,9 @@
 
   Comments     :
 *****************************************************************************/
-void InitDump(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
+void InitDump(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
 	      int MaxSoilLayers, int MaxVegLayers, int Dt,
-	      TOPOPIX ** TopoMap, DUMPSTRUCT * Dump, int *NGraphics,
+	      TOPOPIX **TopoMap, DUMPSTRUCT *Dump, int *NGraphics,
 	      int **which_graphics)
 {
   char *Routine = "InitDump";
@@ -146,6 +146,12 @@ void InitDump(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     // Open file for recording mass balance for entire basin
     sprintf(Dump->SedBalance.FileName, "%sMassSediment.Balance", Dump->Path);
     OpenFile(&(Dump->SedBalance.FilePtr), Dump->SedBalance.FileName, "w", TRUE);
+  }
+
+  // Open file for recording energy balance for entire basin
+  if (Options->HeatFlux) {
+	sprintf(Dump->EnergyBalance.FileName, "%sEnergy.Balance", Dump->Path);
+    OpenFile(&(Dump->EnergyBalance.FilePtr), Dump->EnergyBalance.FileName, "w", TRUE);
   }
 
   // Open file for recording mass balance for entire basin

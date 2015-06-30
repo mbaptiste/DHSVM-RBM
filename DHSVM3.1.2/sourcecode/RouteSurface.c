@@ -44,14 +44,14 @@
   the Saint-Venant equations.
 
 *****************************************************************************/
-void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
-		  SOILPIX ** SoilMap, OPTIONSTRUCT *Options,
-		  UNITHYDR ** UnitHydrograph,
+void RouteSurface(MAPSIZE * Map, TIMESTRUCT *Time, TOPOPIX **TopoMap,
+		  SOILPIX **SoilMap, OPTIONSTRUCT *Options,
+		  UNITHYDR **UnitHydrograph,
 		  UNITHYDRINFO * HydrographInfo, float *Hydrograph,
-		  DUMPSTRUCT *Dump, VEGPIX ** VegMap, VEGTABLE * VType, 
+		  DUMPSTRUCT *Dump, VEGPIX **VegMap, VEGTABLE *VType, 
 		  SOILTABLE *SType, CHANNEL *ChannelData, SEDPIX **SedMap,
 		  PRECIPPIX **PrecipMap, SEDTABLE *SedType,
-		  float Tair, float Rh, float *SedDiams)
+		  float *SedDiams, MET_MAP_PIX **MetMap)
 {
   const char *Routine = "RouteSurface";
   int Lag;			/* Lag time for hydrograph */
@@ -89,92 +89,92 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   int sedbin;                  /* Particle bin that erosion is added to */
   /* Check to see if calculations for surface erosion should be done */
   if (Options->SurfaceErosion) {
-     if ((SedIn = (float **) calloc(Map->NY, sizeof(float *))) == NULL) 
-        ReportError((char *) Routine, 1);
-     for (y = 0; y < Map->NY; y++) {
-        if ((SedIn[y] = (float *) calloc(Map->NX, sizeof(float))) == NULL) {
-	    ReportError((char *) Routine, 1);
-        }
-     }
-     /* Initiazlied Variables */
-     for (y = 0; y < Map->NY; y++) {
-	for (x = 0; x < Map->NX; x++) {
-	   SedIn[y][x] = 0;
+	if ((SedIn = (float **) calloc(Map->NY, sizeof(float *))) == NULL) 
+      ReportError((char *) Routine, 1);
+	for (y = 0; y < Map->NY; y++) {
+      if ((SedIn[y] = (float *) calloc(Map->NX, sizeof(float))) == NULL) {
+		ReportError((char *) Routine, 1);
+	  }
 	}
-     }
+    /* Initiazlied Variables */
+    for (y = 0; y < Map->NY; y++) {
+	  for (x = 0; x < Map->NX; x++) {
+	    SedIn[y][x] = 0;
+	  }
+	}
   }
 
   /* Allocate memory for Runon Matrix */
   if (Options->HasNetwork)  {
-     if ((Runon = (float **) calloc(Map->NY, sizeof(float *))) == NULL) 
-	 ReportError((char *) Routine, 1);
-     for (y = 0; y < Map->NY; y++) {
-	 if ((Runon[y] = (float *) calloc(Map->NX, sizeof(float))) == NULL) {
+    if ((Runon = (float **) calloc(Map->NY, sizeof(float *))) == NULL) 
+	  ReportError((char *) Routine, 1);
+    for (y = 0; y < Map->NY; y++) {
+	  if ((Runon[y] = (float *) calloc(Map->NX, sizeof(float))) == NULL) {
 	    ReportError((char *) Routine, 1);
-	 }
-     }
-     /* Initialize Runon variables */
-     for (y = 0; y < Map->NY; y++) {
-	for (x = 0; x < Map->NX; x++) {
-	   Runon[y][x] = 0.;
+	  }
 	}
-     }
-     /* Option->Routing = false when routing = conventional */
-     if(!Options->Routing) {
-	for (y = 0; y < Map->NY; y++) {
+    /* Initialize Runon variables */
+    for (y = 0; y < Map->NY; y++) {
 	  for (x = 0; x < Map->NX; x++) {
-	    if (INBASIN(TopoMap[y][x].Mask)) {
-		SoilMap[y][x].Runoff = SoilMap[y][x].IExcess; 
-		SoilMap[y][x].IExcess = 0;
-		SoilMap[y][x].DetentionIn = 0;
-	    }
-         }
-	} 
-	for (y = 0; y < Map->NY; y++) {
-	  for (x = 0; x < Map->NX; x++) {
-	     if (INBASIN(TopoMap[y][x].Mask)) {
-		 if (!channel_grid_has_channel(ChannelData->stream_map, x, y)) {
+	    Runon[y][x] = 0.;
+	  }
+	}
+    /* Option->Routing = false when routing = conventional */
+    if (!Options->Routing) {
+	  for (y = 0; y < Map->NY; y++) {
+	    for (x = 0; x < Map->NX; x++) {
+	      if (INBASIN(TopoMap[y][x].Mask)) {
+		    SoilMap[y][x].Runoff = SoilMap[y][x].IExcess; 
+		    SoilMap[y][x].IExcess = 0;
+		    SoilMap[y][x].DetentionIn = 0;
+		  }
+		}
+	  } 
+	  for (y = 0; y < Map->NY; y++) {
+	    for (x = 0; x < Map->NX; x++) {
+	      if (INBASIN(TopoMap[y][x].Mask)) {
+		   if (!channel_grid_has_channel(ChannelData->stream_map, x, y)) {
 		    if (VType[VegMap[y][x].Veg - 1].ImpervFrac > 0.0) {
-			/* Calculate the outflow from impervious portion of urban cell straight to nearest channel cell */		
-			SoilMap[TopoMap[y][x].drains_y][TopoMap[y][x].drains_x].IExcess += 
+			  /* Calculate the outflow from impervious portion of urban cell straight to nearest channel cell */		
+			  SoilMap[TopoMap[y][x].drains_y][TopoMap[y][x].drains_x].IExcess += 
 				(1 - VType[VegMap[y][x].Veg - 1].DetentionFrac) * 
 				VType[VegMap[y][x].Veg - 1].ImpervFrac * SoilMap[y][x].Runoff;
-			/* Retained water in detention storage */
-			SoilMap[y][x].DetentionIn = VType[VegMap[y][x].Veg - 1].DetentionFrac * 
+			  /* Retained water in detention storage */
+			  SoilMap[y][x].DetentionIn = VType[VegMap[y][x].Veg - 1].DetentionFrac * 
 				VType[VegMap[y][x].Veg - 1].ImpervFrac * SoilMap[y][x].Runoff;		
-			/* Retained water in Detention storage routed to channel */   
-			SoilMap[y][x].DetentionStorage += SoilMap[y][x].DetentionIn;
-			SoilMap[y][x].DetentionOut = SoilMap[y][x].DetentionStorage * VType[VegMap[y][x].Veg - 1].DetentionDecay;
-			SoilMap[TopoMap[y][x].drains_y][TopoMap[y][x].drains_x].IExcess += SoilMap[y][x].DetentionOut;
-			SoilMap[y][x].DetentionStorage -= SoilMap[y][x].DetentionOut;
-			if (SoilMap[y][x].DetentionStorage < 0.0) 
-			   SoilMap[y][x].DetentionStorage = 0.0;
-			/* Route the runoff from pervious portion of urban cell to the neighboring cell */       
-			for (n = 0; n < NDIRS; n++) {
-			   int xn = x + xdirection[n];
-			   int yn = y + ydirection[n];
-			   if (valid_cell(Map, xn, yn)) {
-				SoilMap[yn][xn].IExcess += (1 - VType[VegMap[y][x].Veg - 1].ImpervFrac) * SoilMap[y][x].Runoff 
+			  /* Retained water in Detention storage routed to channel */   
+			  SoilMap[y][x].DetentionStorage += SoilMap[y][x].DetentionIn;
+			  SoilMap[y][x].DetentionOut = SoilMap[y][x].DetentionStorage * VType[VegMap[y][x].Veg - 1].DetentionDecay;
+			  SoilMap[TopoMap[y][x].drains_y][TopoMap[y][x].drains_x].IExcess += SoilMap[y][x].DetentionOut;
+			  SoilMap[y][x].DetentionStorage -= SoilMap[y][x].DetentionOut;
+			  if (SoilMap[y][x].DetentionStorage < 0.0) 
+			    SoilMap[y][x].DetentionStorage = 0.0;
+			  /* Route the runoff from pervious portion of urban cell to the neighboring cell */       
+			  for (n = 0; n < NDIRS; n++) {
+			    int xn = x + xdirection[n];
+			    int yn = y + ydirection[n];
+			    if (valid_cell(Map, xn, yn)) {
+				  SoilMap[yn][xn].IExcess += (1 - VType[VegMap[y][x].Veg - 1].ImpervFrac) * SoilMap[y][x].Runoff 
 					*((float) TopoMap[y][x].Dir[n] /(float) TopoMap[y][x].TotalDir);
-			   }
+				}
+			  }
 			}
-		    }
 		    else {
-			for (n = 0; n < NDIRS; n++) {
+			  for (n = 0; n < NDIRS; n++) {
 			   int xn = x + xdirection[n];
 			   int yn = y + ydirection[n];
 			   if (valid_cell(Map, xn, yn)) {
-				SoilMap[yn][xn].IExcess += SoilMap[y][x].Runoff *((float)TopoMap[y][x].Dir[n]/(float)TopoMap[y][x].TotalDir);
+				 SoilMap[yn][xn].IExcess += SoilMap[y][x].Runoff *((float)TopoMap[y][x].Dir[n]/(float)TopoMap[y][x].TotalDir);
 			   }
-			}
+			  }
 		    }
 		 }
 		 else if (channel_grid_has_channel(ChannelData->stream_map, x, y)){
 			SoilMap[y][x].IExcess += SoilMap[y][x].Runoff;
-               }
-	     }
-	  }
-      }
+		 }
+	   }
+	 }
+   }
 }/* end if Options->routing = conventional */
 /***********************************************************************************************************************/ 
 else {/* Begin code for kinematic wave routing. */ 
@@ -197,12 +197,7 @@ else {/* Begin code for kinematic wave routing. */
 			SedMap[y][x].Erosion = 0.;
 		}
 	}
-	
-	/* estimate kinematic viscosity through interpolation JSL */
-    knviscosity=viscosity(Tair, Rh);
-    /* converting units to m2/sec */
-    knviscosity /= 1000. * 1000.;
-	
+		
 	/* Must loop through surface routing multiple times within one DHSVM  model time step. */
 	while (Before(&(VariableTime.Current), &(NextTime.Current))) {
 		/* Loop thru all of the cells in descending order of elevation */
@@ -210,6 +205,10 @@ else {/* Begin code for kinematic wave routing. */
 			y = Map->OrderedCells[k].y;
 			x = Map->OrderedCells[k].x;
 			outflow = SoilMap[y][x].startRunoff;   
+		    /* estimate kinematic viscosity through interpolation JSL */
+			knviscosity=viscosity(MetMap[y][x].air_temp, MetMap[y][x].humidity);
+            /* converting units to m2/sec */
+            knviscosity /= 1000. * 1000.;
 			slope = TopoMap[y][x].Slope;
 			if (slope == 0) slope=0.0001;
 			else if (slope < 0) {

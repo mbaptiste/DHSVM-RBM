@@ -60,6 +60,7 @@ typedef struct {
   FILES Aggregate;					/* File with aggregated values for entire basin */
   FILES AggregateSediment;			/* File with aggregated sediment values for entire basin */
   FILES Balance;					/* File with summed mass balance values for entire basin */
+  FILES EnergyBalance;				/* File with summed energy balance values for entire basin */
   FILES FinalBalance;               /* File with summed mass balance values for the entire simulation period for entire basin */
   FILES SedBalance;					/* File with summed mass balance values for entire basin */
   FILES Stream;
@@ -286,14 +287,12 @@ typedef struct {
 
 typedef struct {
   float NetShort[2];    /* Shortwave radiation for vegetation surfaces and ground/snow surface W/m2 */
-
   float LongIn[2];		/* Incoming longwave radiation for vegetation surfaces and ground/snow surface W/m2 */
-
   float LongOut[2];		/* Outgoing longwave radiation for vegetation surfaces and ground/snow surface W/m2 */
-
-  float PixelNetShort;	/* Net shortwave for the entire pixel W/m2 */
+  float NetShortIn;	    /* Surface net shortwave radiation W/m2 */
+  float NetLongIn;	    /* Surface net longwave radiation W/m2 */
   float RBMNetLong;     /* Longwave radiation reaching the water surface W/m2 (for RBM) */
-  float RBMNetShort;
+  float RBMNetShort;    /* Shortwave radiation reaching the water surface W/m2 (for RBM) */
   float PixelLongIn;	/* Incoming longwave for entire pixel W/m2 */
   float PixelLongOut;	/* Outgoing longwave for entire pixel W/m2 */
   float ObsShortIn;
@@ -361,22 +360,22 @@ typedef struct {
   float TSurf;				/* Temperature of snow pack surface layer */
   float ColdContent;		/* Cold content of snow pack */
   float Albedo;				/* Albedo of snow pack */
-  float Depth;				/* Snow depth; Does not appear to be calculated
-							or used anywhere */
-  float VaporMassFlux;		/* Vapor mass flux to/from snow pack
-				   (m/timestep) */
-  float CanopyVaporMassFlux;	/* Vapor mass flux to/from intercepted snow in
-				   the canopy (m/timestep) */
-  float Glacier;		/*amount of snow added to glacier during simulation */
+  float Depth;				/* Snow depth; Does not appear to be calculated or used anywhere */
+  float VaporMassFlux;		/* Vapor mass flux to/from snow pack (m/timestep) */
+  float CanopyVaporMassFlux;/* Vapor mass flux to/from intercepted snow in the canopy (m/timestep) */
+  float Glacier;		    /*amount of snow added to glacier during simulation */
 } SNOWPIX;
 
 typedef struct {
   int   Soil;			/* Soil type */
   float Depth;			/* Depth of total soil zone, including all root
-						zone layers, and the saturated zone */
+						   zone layers, and the saturated zone */
   float *Moist;			/* Soil moisture content in layers (0-1) */
   float *Perc;			/* Percolation from layers */
   float *Temp;			/* Temperature in each layer (C) */
+  float *LayerKh;		/* Effective thermal conductivity for each soil layer above the specified depth 
+						   (W/(m*K)) */
+  float *Ch;            /* Effective soil volumetric heat capacity for each soil lyaer (J/(m^3*K)) */
   float TableDepth;		/* Depth of water table below ground surface (m) */
   float WaterLevel;		/* Absolute height of the watertable above datum (m), 
 						i.e. corrected for terrain elevation */
@@ -393,10 +392,14 @@ typedef struct {
   float Qg;				/* Ground heat exchange */
   float Qst;			/* Ground heat storage */
   float Ra;				/* Soil surface aerodynamic resistance (s/m) */
-  float InfiltAcc;               /* Accumulated water in the top layer (m) */
-  float MoistInit;               /* Initial moisture content when ponding begins (0-1) */
-  float startRunoff;             /* Surface water flux from the previus (sub) time step. Used for kinematic wave routing.*/
-  float startRunon;              /* Surface water flux from the previus (sub) time step. Used for kinematic wave routing.*/
+  float tau;            /* Transmittance for overstory vegetation layer */
+  float NetShortIn;	    /* Net shortwave for the entire pixel W/m2 */
+  float NetLongIn;	    /* Incoming longwave for entire pixel W/m2 */
+  float InfiltAcc;      /* Accumulated water in the top layer (m) */
+  float MoistInit;      /* Initial moisture content when ponding begins (0-1) */
+  float MeltEnergy;	    /* Energy used to melt snow and  change of cold content of snow pack */
+  float startRunoff;    /* Surface water flux from the previus (sub) time step. Used for kinematic wave routing.*/
+  float startRunon;     /* Surface water flux from the previus (sub) time step. Used for kinematic wave routing.*/
   float IExcessSed;              /* amount of surface runoff (m) generated from HOF and Return flow  - saved for sediment routing */
   float DetentionStorage;        /* amount of water kept in detention storage when impervious fraction > 0 */
   float DetentionIn;			 /* detention storage change in current time step */
@@ -466,7 +469,7 @@ typedef struct {
   int Index;
   int NVegLayers;		/* Number of vegetation layers */
   int NSoilLayers;		/* Number of soil layers */
-  unsigned char OverStory;	        /* TRUE if there is an overstory */
+  unsigned char OverStory;	/* TRUE if there is an overstory */
   unsigned char UnderStory;	/* TRUE if there is an understory */
   float *Height;		/* Height of vegetation (m) */
   float *Fract;			/* Fractional coverage */
@@ -547,6 +550,8 @@ typedef struct {
   float air_temp;
   float wind_speed;
   float humidity;
+  float air_dens;
+  float Lv;
 } MET_MAP_PIX;
 
 typedef struct {
@@ -597,6 +602,7 @@ typedef struct {
   ROADSTRUCT Road;
   SNOWPIX Snow;
   SOILPIX Soil;
+  MET_MAP_PIX Met;
   SEDPIX Sediment;
   FINEPIX Fine;
   float SoilWater;

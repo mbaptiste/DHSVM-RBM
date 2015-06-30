@@ -25,7 +25,7 @@
 #include "Calendar.h"
 
 /*****************************************************************************
-  Aggregate()
+  MassBalance()
   
   Calculate the average values for the different fluxes and state variables
   over the basin.  Only the runoff and some of the sediment variables (as 
@@ -38,7 +38,7 @@
   which is executed at the beginning of each time step.
 *****************************************************************************/
 void MassBalance(DATE *Current, FILES *Out, FILES *SedOut, AGGREGATED *Total,
-		 WATERBALANCE *Mass, OPTIONSTRUCT * Options)
+		 WATERBALANCE *Mass, OPTIONSTRUCT *Options)
 {
   float NewWaterStorage;	/* water storage at the end of the time step */
   float Output;			/* total water flux leaving the basin;  */
@@ -156,3 +156,22 @@ void MassBalance(DATE *Current, FILES *Out, FILES *SedOut, AGGREGATED *Total,
 /*       14. Total amount of sediment stored in channels (kg) */
 /*       15. Total channel erosion mass balance error for the current time step (kg) */
   
+/*****************************************************************************
+  EnergyBalance()
+  
+  Calculate the average values for the different energy fluxes variables
+  over the basin.  
+*****************************************************************************/
+void EnergyBalance(DATE *Current, FILES *Out, AGGREGATED *Total)
+{
+  float EnergyError;        /* energy balance error */
+
+  EnergyError = Total->Soil.Qnet + Total->Soil.Qs + Total->Soil.Qe + 
+	  Total->Soil.Qg + Total->Soil.Qst + Total->Soil.MeltEnergy;
+  
+  PrintDate(Current, Out->FilePtr);
+  fprintf(Out->FilePtr, " %5.2f %5.2f %7.2f %7.2f %7.2f %7.2f %7.2f %7.2f %7.2f\n",
+	  Total->Met.air_temp, Total->Soil.TSurf,
+	  Total->Soil.Qnet, Total->Soil.Qs, Total->Soil.Qe, Total->Soil.Qg, 
+	  Total->Soil.Qst, Total->Soil.MeltEnergy, EnergyError);
+}

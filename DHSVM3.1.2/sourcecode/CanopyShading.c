@@ -107,7 +107,7 @@ void CalcCanopyShading(TIMESTRUCT *Time, Channel *Channel, SOLARGEOMETRY *SolarG
 			-Channel->rveg.CanopyBankDist;
 		
 		/* Case 1 - No shade */
-		if (Dx2 <= 0.0 || Channel->rveg.Extn == 0)
+		if (Dx2 <= 0.0 || Channel->rveg.Extn == 0 || Channel->rveg.BUFFERWIDTH == 0)
           ShadeCase = 1;
 	    /* Case 2 - Partial shade, sun above buffer */
 	    else if (Dx1 <= 0.0 && Dx2 <= Channel->rveg.BUFFERWIDTH) 

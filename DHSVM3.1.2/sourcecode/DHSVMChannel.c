@@ -231,15 +231,14 @@ double ChannelCulvertFlow(int y, int x, CHANNEL * ChannelData)
 void
 RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
 	    TOPOPIX ** TopoMap, SOILPIX ** SoilMap, AGGREGATED * Total, 
-	     OPTIONSTRUCT *Options, ROADSTRUCT ** Network, 
+	     OPTIONSTRUCT *Options, ROADSTRUCT **Network, 
 	     SOILTABLE * SType, PRECIPPIX ** PrecipMap, SEDPIX **SedMap,
-	     float Tair, float Rh, float *SedDiams)
+	     float *SedDiams, MET_MAP_PIX **MetMap)
 {
   int x, y;
   int flag;
   char buffer[32];
   float CulvertFlow;
-
 
   /* give any surface water to roads w/o sinks */
   for (y = 0; y < Map->NY; y++) {
@@ -261,7 +260,7 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
   
   if(Options->RoadRouting){
     RouteRoad(Map, Time, TopoMap, SoilMap, Network, SType, ChannelData, 
-	      PrecipMap, SedMap, Tair, Rh, SedDiams);  
+	      PrecipMap, SedMap, SedDiams, MetMap);  
   }
 
   /* route the road network and save results */

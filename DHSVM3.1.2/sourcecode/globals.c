@@ -37,3 +37,5 @@ float DEBRISd50;
 float DEBRISd90;
 float CHANNELd50;
 float CHANNELd90;
+float avg_temp;         /* Soil temperature (deg C) at a very deep soil depth where soil 
+						   temperature variation is neglible. */

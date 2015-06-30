@@ -128,13 +128,11 @@ void StoreModelState(char *Path, DATE * Current, MAPSIZE * Map,
 
     for (y = 0; y < Map->NY; y++) {
       for (x = 0; x < Map->NX; x++) {
-	if (INBASIN(TopoMap[y][x].Mask)) {
-
-	  ((float *) Array)[y * Map->NX + x] = MetMap[y][x].air_temp;
-
-	}
-	else
-	  ((float *) Array)[y * Map->NX + x] = NA;
+	    if (INBASIN(TopoMap[y][x].Mask)) {
+		  ((float *) Array)[y * Map->NX + x] = MetMap[y][x].air_temp;
+		}
+		else
+		  ((float *) Array)[y * Map->NX + x] = NA;
       }
     }
     DMap.ID = 702;
@@ -428,9 +426,9 @@ void StoreModelState(char *Path, DATE * Current, MAPSIZE * Map,
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
       if (INBASIN(TopoMap[y][x].Mask))
-	((float *) Array)[y * Map->NX + x] = SoilMap[y][x].TSurf;
+	    ((float *) Array)[y * Map->NX + x] = SoilMap[y][x].TSurf;
       else
-	((float *) Array)[y * Map->NX + x] = SoilMap[y][x].TSurf;
+	    ((float *) Array)[y * Map->NX + x] = SoilMap[y][x].TSurf;
     }
   }
   DMap.ID = 505;
@@ -442,16 +440,16 @@ void StoreModelState(char *Path, DATE * Current, MAPSIZE * Map,
   for (i = 0; i < Soil->MaxLayers; i++) {
     for (y = 0; y < Map->NY; y++) {
       for (x = 0; x < Map->NX; x++) {
-	if (INBASIN(TopoMap[y][x].Mask)) {
-	  NSoil = Soil->NLayers[SoilMap[y][x].Soil - 1];
-	  if (i < NSoil)
-	    ((float *) Array)[y * Map->NX + x] = SoilMap[y][x].Temp[i];
-	  else
-	    ((float *) Array)[y * Map->NX + x] = NA;
-	}
-	else
-	  ((float *) Array)[y * Map->NX + x] = NA;
-      }
+	    if (INBASIN(TopoMap[y][x].Mask)) {
+	      NSoil = Soil->NLayers[SoilMap[y][x].Soil - 1];
+	      if (i < NSoil)
+	        ((float *) Array)[y * Map->NX + x] = SoilMap[y][x].Temp[i];
+	      else
+	       ((float *) Array)[y * Map->NX + x] = NA;
+		}
+		else
+	     ((float *) Array)[y * Map->NX + x] = NA;
+	  }
     }
     DMap.ID = 511;
     DMap.Layer = i;

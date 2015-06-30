@@ -120,11 +120,7 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     {"CONSTANTS", "TEMPERATURE LAPSE RATE", "", ""},
     {"CONSTANTS", "PRECIPITATION LAPSE RATE", "", ""},
     {"CONSTANTS", "PRECIPITATION MULTIPLIER", "", ""},
-	{"CONSTANTS", "TREE HEIGHT", "", ""},
-	{"CONSTANTS", "BUFFER WIDTH", "", ""},
-	{"CONSTANTS", "OVERHANG COEFFICIENT", "", ""},
-	{"CONSTANTS", "MONTHLY EXTINCTION COEFFICIENT", "", ""},
-	{"CONSTANTS", "CANOPY BANK DISTANCE", "", ""},
+	{"CONSTANTS", "AVERAGE SOIL TEMPERATURE", "", ""},
     {NULL, NULL, "", NULL}
   };
 
@@ -530,4 +526,11 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
 
   if (!CopyFloat(&PRECIPMULTIPLIER, StrEnv[precip_multiplier].VarStr, 1))
       ReportError(StrEnv[precip_multiplier].KeyName, 51);
+
+  if (Options->HeatFlux) {
+	if (!CopyFloat(&avg_temp, StrEnv[soil_temp].VarStr, 1))
+      ReportError(StrEnv[soil_temp].KeyName, 51);
+  }
+  else
+    avg_temp = NOT_APPLICABLE;
 }

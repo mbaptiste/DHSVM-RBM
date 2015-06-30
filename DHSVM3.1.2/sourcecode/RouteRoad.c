@@ -56,22 +56,19 @@
 void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	       SOILPIX ** SoilMap, ROADSTRUCT ** Network, SOILTABLE * SType,
 	       CHANNEL * ChannelData, PRECIPPIX ** PrecipMap, SEDPIX **SedMap,
-	       float Tair, float Rh, float *SedDiams) 
+	       float *SedDiams, MET_MAP_PIX **MetMap) 
 {
   const char *Routine = "RouteRoad";
   int i,j,x,y;                   /* Counters */
   float dx, dy;                  /* Road grid cell dimensions (m)*/
-  float cells;                   /* Number of road grid cells in a basin grid 
-				    cell */
+  float cells;                   /* Number of road grid cells in a basin grid cell */
   float roadwater;               /* Depth (m) of water on the road surface */
   float knviscosity;             /* kinematic viscosity (mm2/s) */ 
-  double slope;                   /* Slope of road surface the water travels 
-				    over (m/m)*/    
+  double slope;                  /* Slope of road surface the water travels over (m/m)*/    
   float *Runon;                  /* Water on moving downslope along the road (m) */
-  double beta, alpha;             /* For Mannings. alpha is channel parameter 
-				    including wetted perimeter, n, and slope. */
-  double outflow;                 /* Flow out of a road grid cell in the 
-				    subtimestep (m3/s) */
+  double beta, alpha;            /* For Mannings. alpha is channel parameter 
+									including wetted perimeter, n, and slope. */
+  double outflow;                /* Flow out of a road grid cell in the subtimestep (m3/s) */
   double check; 
 
   TIMESTRUCT NextTime;
@@ -79,22 +76,22 @@ void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   float VariableDT;              /* Maximum stable time step (s) */  
 
   float ES;                      /* Rain splash erosion (m2/s)*/
-  float ch;                      	/* damping effectiveness of surface water */
+  float ch;                      /* damping effectiveness of surface water */
   float h;                       /* Water depth (m) */
-  float k;                       	/* Reduction factor due to surface water depth */
+  float k;                       /* Reduction factor due to surface water depth */
   float DS;                      /* Median particle size (m) */
   float Cd;                      /* Drag coefficient */
   float vs, vs_last;             /* Settling velocity (m/s)*/
   float cg;                      /* Transfer rate coefficient (1/s)*/
   float CH;                      /* inversely related to soil cohesion or other restrictions on
-				    soil entrainment by flowing water; = 1 during deposition */
+									soil entrainment by flowing water; = 1 during deposition */
   float Rn;                      /* Particle Reynolds number */
   float streampower;             /* Streampower (m/s) */
   float Cmx;                     /* Transport capacity (m3/m3) */
   float SedOut;                  /* Current local sediment concentration (m3/m3) */
-  float *SedIn;                   /* Current inflow sediment concentration (m3/m3) */
+  float *SedIn;                  /* Current inflow sediment concentration (m3/m3) */
   float term1, term2, term3;
-  int sedbin;                   /* Particle bin that road erosion is added to */
+  int sedbin;                    /* Particle bin that road erosion is added to */
 
   if ((Runon = (float *) calloc(CELLFACTOR, sizeof(float))) == NULL)
     ReportError((char *) Routine, 1);
@@ -107,15 +104,13 @@ void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   /* Holds the value of the next DHSVM time step. */ 
   IncreaseTime(&NextTime);
 
-  knviscosity = viscosity(Tair, Rh);
- 
   /* Since Network.IExcess stays in the cell it is generated in,
      route each basin grid cell, with a road, separately */
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
       if (INBASIN(TopoMap[y][x].Mask)) {
-	if (channel_grid_has_channel(ChannelData->road_map, x, y)) {
-	  
+		 knviscosity = viscosity(MetMap[y][x].air_temp, MetMap[y][x].humidity);
+	if (channel_grid_has_channel(ChannelData->road_map, x, y)) {  
 	   VariableTime = *Time;
 
 	  /* Discretizing road into a grid for finite difference solution.
