@@ -1146,7 +1146,7 @@ int *channel_read_rveg_param(Channel *head, const char *file, int *MaxID)
     error_handler(ERRHDL_ERROR,
 		  "channel_read_rveg_param: unable to open file \"%s\": %s",
 		  file, strerror(errno));
-    return NULL;
+    exit(3);
   }
 
   *MaxID = 0;
