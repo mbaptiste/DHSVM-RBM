@@ -28,6 +28,7 @@
 #include <errno.h>
 #include "Calendar.h"
 #include "errorhandler.h"
+#include "DHSVMerror.h"
 #include "channel.h"
 #include "channel_grid.h"
 #include "functions.h"
@@ -74,20 +75,18 @@ void CalcCanopyShading(TIMESTRUCT *Time, Channel *Channel, SOLARGEOMETRY *SolarG
 	  if (IsNewMonth(&(Time->Current), Time->Dt))
 		 Channel->rveg.Extn = Channel->rveg.ExtnCoeff[Time->Current.Month - 1];
 
-	  /* debug */
-	  /*if (Time->Current.Month == 2) {
-		 printf("Month[%d]-seg[%d]: %f\t%f\n", Time->Current.Month, Channel->id, Channel->rveg.Extn, Channel->rveg.BUFFERWIDTH);
-	  }*/
-	  /* debug ends */
-
-
 	  /* compute stream azimuth in radians */
 	  StreamAzimuth = Channel->azimuth*PI/180.;
 
-	  /* compute the average height of the canopy in reference to the 
-		 elevation of stream surface. its assumed that the distance from
-		 the bank to the stream is 0.25 * bankheight */
-	  // HDEM = 0.25*Channel->class2->bank_height + TREEHEIGHT;
+	  /* debug */
+	  if (Channel->rveg.TREEHEIGHT < 0.|| Channel->rveg.BUFFERWIDTH < 0. ||
+		  Channel->rveg.OvhCoeff < 0. || Channel->rveg.Extn < 0. ||
+		  Channel->rveg.CanopyBankDist < 0. ) {
+		ReportError("CalcCanopyShading()", 68);
+	  }
+	  /* debug ends */
+
+	  /* compute the average height of the canopy */
 	  HDEM = Channel->rveg.TREEHEIGHT;
 
 	  /* if a vegetation polygon on the sunward bank is located very close 
@@ -136,11 +135,6 @@ void CalcCanopyShading(TIMESTRUCT *Time, Channel *Channel, SOLARGEOMETRY *SolarG
 		  exit(0);
 		}
 
-		/* debug */
-		/* if (Channel->rveg.Extn > 0.)
-			printf("[%d]\t%f\t(Extn=%f)\n", Channel->id, Net_Shade_Fctr, Channel->rveg.Extn); */
-		/* debug ends */
-
 	    /* VEGSHD + OVHSHD is then divided by the stream surface width to 
 	    approximate the fraction of stream surface covered by the composite shade. 
 	    This ratio then is used to estimate the amount of incoming direct beam 
@@ -151,7 +145,7 @@ void CalcCanopyShading(TIMESTRUCT *Time, Channel *Channel, SOLARGEOMETRY *SolarG
 	  }
 
 	  /* compute shading effect on diffusive radiation */
-	  if (HDEM > 0) {
+	  if (HDEM > 0 && Channel->rveg.Extn != 0 && Channel->rveg.BUFFERWIDTH != 0) {
 		SKOP = CalcCanopySkyView(HDEM, Channel->rveg.CanopyBankDist);
 		Channel->Diffuse *= MIN(Channel->skyview, SKOP);
 	    /* compute long-wave radiation */
