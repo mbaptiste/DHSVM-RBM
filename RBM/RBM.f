@@ -243,8 +243,8 @@ c
 c
       hour_inc=1./nwpd
       do nr=1,1000
-         T_head(nr)=mu
-         T_smth(nr)=mu
+         T_head(nr)=mu(nr)
+         T_smth(nr)=mu(nr)
       end do
       n1=1
       n2=2
@@ -584,8 +584,8 @@ c
                      time=year+(day-1.+hour_inc*period)/xd_year                    
                      if(nsmod.eq.0) then
                        rmile_plot=x_dist(nr,ns)/5280.
-                       write(20,'(f11.5,1x,i4,1x,2i5,1x,4f7.2)') 
-     &                       time,nd,ncell,ns,t0
+                             write(20,'(f11.5,i5,1x,i4,1x,2i5,1x,5f7.2,f9.2)') 
+     &                       time,nyear,nd,ncell,ns,t0
      &                      ,T_head(nr),dbt(ncell)
      &                      ,depth(ncell),u(ncell),qin(ncell)
 
