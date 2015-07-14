@@ -735,7 +735,7 @@ C
          QEVAP=QEVAP*(E0-EA(ncell))
          QWS=6.693E-2+1.471E-3*T_fit(i)
          q_fit(i)=QNS(ncell)+0.97*QNA(ncell)-QWS-QEVAP+QCONV
-     &           -Ksw*(T_fit(i)-10.)
+c     &           -Ksw*(T_fit(i)-10.)
       end do
 c
 c     q=AT+B
