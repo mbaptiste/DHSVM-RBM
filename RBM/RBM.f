@@ -625,7 +625,10 @@ c
                         if(lat_flow(nncell).gt.0) then
                           q1=0.5*(qin(nncell)+qout(nncell))
                           q2=q1+lat_flow(nncell)
-                           T_dist=T_head(nr)
+c
+c  Modified nonpoint source temperature so as to be the same
+c  as the instream simulated temperature for Connecticut River 7/2015
+                           T_dist=t0
                            t0=(q1*t0+lat_flow(nncell)*T_dist)/q2
                            dtlat=t0-t00
                         end if
