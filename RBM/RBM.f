@@ -29,15 +29,10 @@ C     yearsley@hydro.washington.edu
 C
       character*8  start_data,end_data     
       character*200 Prefix
-c      character (len=200 ):: basin
-c      character (len=200 ):: param_file
-c      character (len=200 ):: temp_file
-c      character (len=200 ):: spatial_file
       integer iargc
       integer numarg
-
-c
-c Command line input
+ 
+c     Command line input
 c
       numarg = iargc ( )
       if (numarg .lt. 1) then
@@ -51,51 +46,37 @@ c
       end if
       call getarg ( 1, Prefix )
 c
-c    Identify and open necessary files
+c     Identify and open necessary files
 c
 c     open the output file 
-c
       open(unit=20,file=TRIM(Prefix)//'.temp',status='unknown')
 c
-c     open the segment mapping file 
-c
-c     open(unit=22,file=TRIM(Prefix)//'.segmap',status='unknown')
-c
 c     Open file with weather and inflow data
-c 
       write(*,*) 'Forcing file -  ', TRIM(Prefix)//'.forcing'
       open(unit=30,file=TRIM(Prefix)//'.forcing',STATUS='old')
 c
 c     Open network file
-c
       OPEN(UNIT=90,FILE=TRIM(Prefix)//'.net',STATUS='OLD')
 c
-c
 c     Read header information from control file
-c
       read(90,*)
 c
-c     Read name of file with forcing functions:<ProjectName>.forcing
-c 
+c     Read name of file with forcing functions:<ProjectName>.forcing 
       read(90,'(A)') forcing_file
 c
 C     Call systems programs to get started
 C
 C     SUBROUTINE BEGIN reads control file, sets up topology and
 C     important properties of reaches
-C
-
       write(*,*) 'Calling BEGIN'
       CALL BEGIN
 C
 C     SUBROUTINE SYSTMM performs the simulations
 C
-
       CALL SYSTMM
 C
 C     Close files after simulation is complete
 C
-
       write(*,*) ' Closing files after simulation'
       CLOSE(30)
       CLOSE(90)
@@ -112,18 +93,6 @@ C
       ndelta=2
       delta_n=ndelta
 C
-C     Initialize arrays and constants
-C
-c      do nr=1,100
-c	   do n=-2,500
-c            temp(nr,n,1)=0.0
-c	   end do
-c      end do
-C
-C     Card Group I
-C
-c
-c   
 c     Mohseni parameters
 c
       read(90,*) alf_Mu,beta,gmma,mu,a_smooth
@@ -141,7 +110,7 @@ c     Read the starting and ending times and the number of
 c     periods per day of weather data from the forcing file
 c
       read(30,*) start_time,end_time,nwpd,nd_start
-       write(*,*) start_time,'  ',end_time,nwpd,nd_start
+      write(*,*) start_time,'  ',end_time,nwpd,nd_start
 c 
       write(*,*) 'Number of simulations per day - ',nwpd
 c
@@ -156,30 +125,27 @@ c
 c
 c     Establish the Julian day for which simulations begin
 c
-	jul_start=julian(start_year,start_month,start_day)
+      jul_start=julian(start_year,start_month,start_day)
 c
       read(90,*) no_rch
-       write(*,*) "Number of stream reaches - ",no_rch
-c
+      write(*,*) "Number of stream reaches - ",no_rch
 c
 c     Start reading the reach date and initialize the reach index, NR
 c     and the cell index, NCELL
 c
       ncell=0
       nreach=0
-	ns_total=0
+      ns_total=0
   100 continue
 C
 C     Card Group IIb. Reach characteristics
 C
       nreach=nreach+1
-	if(nreach.gt.no_rch) go to 500
+      if(nreach.gt.no_rch) go to 500
 c
 c     Initialize NSEG, the total number of segments in this reach
-c
-c
       nseg=0
-         write(*,*) ' Starting to read reach ',nreach
+      write(*,*) ' Starting to read reach ',nreach
 c
 c     Read the number of cells in this reach, the headwater #,
 c     the number of the cell where it enters the next higher order stream,
@@ -187,24 +153,25 @@ c     the headwater number of the next higher order stream it enters, and
 c     the river mile of the headwaters.
 c
 c
-         read(90,*) Dummy_A,no_cells(nreach),
+      read(90,*) Dummy_A,no_cells(nreach),
      &              Dummy_A,main_stem(nreach),Dummy_A,trib_cell                
 c
 c     If this is reach that is tributary to cell TRIB_CELL, give it the
 c     pointer TRIB(TRIB_CELL) the index of this reach for further use.
 c     Also keep track of the total number of tributaries for this cell
 c
-         if (trib_cell.gt.0) then
-            no_tribs(trib_cell)=no_tribs(trib_cell)+1
-            trib(trib_cell,no_tribs(trib_cell))=nreach
-         end if
+      if (trib_cell.gt.0) then
+         no_tribs(trib_cell)=no_tribs(trib_cell)+1
+         trib(trib_cell,no_tribs(trib_cell))=nreach
+      end if
 c
 c     Reading Reach Element information
 c
 c
-         first_cell=1
-         do nc=1,no_cells(nreach)
-            ncell=ncell+1
+      first_cell=1
+c
+      do nc=1,no_cells(nreach)
+        ncell=ncell+1
 
 c
 c     The headwaters index for each cell in this reach is given
@@ -213,45 +180,38 @@ c
 C     Card Type 3. Cell indexing #, Node # Row # Column Lat Long RM
 C
 
-            read(90,*) Dummy_B,nnc,Dummy_B,node(nnc)
-     &                ,Dummy_B,x_0,Dummy_B,x_1
-     &                ,Dummy_B,elev(nreach)
-           if(first_cell.eq.1) then
-              first_cell=0
-              head_cell(nreach)=ncell
-              x_dist(nreach,0)=x_1
-           end if
-              dx(ncell)=(x_1-x_0)/ndelta
-              nndlta=0
+        read(90,*) Dummy_B,nnc,Dummy_B,node(nnc)
+     &           ,Dummy_B,x_0,Dummy_B,x_1
+     &           ,Dummy_B,elev(nreach)
+        if (first_cell.eq.1) then
+          first_cell=0
+          head_cell(nreach)=ncell
+          x_dist(nreach,0)=x_1
+        end if
+        dx(ncell)=(x_1-x_0)/ndelta
+        nndlta=0
   200 continue
-              nndlta=nndlta+1
-              nseg=nseg+1
-	      ns_total=ns_total+1
-              segment_cell(nreach,nseg)=ncell
-              x_dist(nreach,nseg)=x_dist(nreach,nseg-1)-dx(ncell)
 c
-c   Write Segment List for mapping to temperature output 11/19/2008
-C 
-c	write(22,*) nnc,node(nnc)
-c
+        nndlta=nndlta+1
+        nseg=nseg+1
+        ns_total=ns_total+1
+        segment_cell(nreach,nseg)=ncell
+        x_dist(nreach,nseg)=x_dist(nreach,nseg-1)-dx(ncell)
 c 
-              if(nndlta.lt.ndelta) go to 200   
-              no_celm(nreach)=nseg
-              segment_cell(nreach,nseg)=ncell
-              x_dist(nreach,nseg)=x_0
+        if (nndlta.lt.ndelta) go to 200   
+        no_celm(nreach)=nseg
+        segment_cell(nreach,nseg)=ncell
+        x_dist(nreach,nseg)=x_0
 C
+      end do
 c
-         end do
-c
-c    Define last segment for purposes of specifying tributary
-c    temperatures 11/14/2008
+c     Define last segment for purposes of specifying tributary
+c     temperatures 11/14/2008
 c
 c
 	go to 100
   500	continue
-        nreach=no_rch
-c
-c
+      nreach=no_rch
       xwpd=nwpd
       dt_comp=86400./xwpd
 C
@@ -277,7 +237,6 @@ c
 c
 c
       day_inc=1./nwpd
-c
       do nr=1,5000
          T_head(nr)=mu
          T_smth(nr)=mu
@@ -312,8 +271,6 @@ c
       time=year+day_fract+hr_fract
 c
 c     Year loop starts
-c
-c
       write(*,*) 'dt_comp',dt_comp
       do nyear=start_year,end_year
          write(*,*) ' Simulation Year - ',nyear
@@ -324,105 +281,83 @@ c
            lp_year=2
          end if
 c
-c     Day loop starts
-c
-c
-        if (nyear.eq.start_year) then
-          nd1=ndmo(start_month,lp_year)+start_day
-       else
-          nd1=1
-       end if
-       if (nyear.eq.end_year) then
-         nd2=ndmo(end_month,lp_year)+end_day
-       else
-         nd2=nd_year
-       end if
+c        Day loop starts
+         if (nyear.eq.start_year) then
+           nd1=ndmo(start_month,lp_year)+start_day
+         else
+           nd1=1
+         end if
+         if (nyear.eq.end_year) then
+           nd2=ndmo(end_month,lp_year)+end_day
+         else
+           nd2=nd_year
+         end if
 c
 c
          DO ND=nd1,nd2
 c
 c     Start the numbers of days-to-date counter
+           ndays=ndays+1
 c
+c     Daily period loop starts
+           DO ndd=nd_start,nwpd
 c
-         ndays=ndays+1
-c
-c    Daily period loop starts
-c
-
-            DO ndd=nd_start,nwpd
-c
-c    Increment the time stamp
-c 
-            time=time+sim_incr 
+c     Increment the time stamp
+             time=time+sim_incr 
 c
 c     Begin reach computations
 c      
-               ind=nd
-               ipd=ndd
-               day=nd
+             ind=nd
+             ipd=ndd
+             day=nd
 c
-c     Read advected energy and meteorology data
-c
-      
-               l_seg = 0
-               do nr=1,nreach
+c     Read advected energy and meteorology data      
+             l_seg = 0
+             do nr=1,nreach
 c
 c     Hardwire annual average temperature for headwaters 
 c
-
-                  do nc=1,no_cells(nr)
-                     l_seg=l_seg+1
-                     read(30,*,end=900) nn1
+               do nc=1,no_cells(nr)
+                 l_seg=l_seg+1
+                 read(30,*,end=900) nn1
      &                      ,press(l_seg),dbt(l_seg)
      &                      ,qna(l_seg),qns(l_seg),ea(l_seg),wind(l_seg)
      &                      ,qin(l_seg),qout(l_seg)
 
-                     qavg=0.5*(qin(l_seg)+qout(l_seg))
-c
-c                     u(l_seg)=.21205*(qavg**0.5183) 
-c                     u(l_seg)=amax1(0.5,u(l_seg))
+                 qavg=0.5*(qin(l_seg)+qout(l_seg))
 c
 c    Stream speed estimated with Leopold coefficients
 c 
-                     u(l_seg)=U_a*(qavg**U_b) 
-                     u(l_seg) = amax1(u_min,u(l_seg))
+                 u(l_seg)=U_a*(qavg**U_b) 
+                 u(l_seg) = amax1(u_min,u(l_seg))
 c 
-                     qdiff(l_seg)=(qout(l_seg)-qin(l_seg))/delta_n
+                 qdiff(l_seg)=(qout(l_seg)-qin(l_seg))/delta_n
 c 
-                     dt(l_seg)=dx(l_seg)/u(l_seg)
-c
-c  Original baseline
-c                     depth(l_seg)=0.2*(qavg**0.4)
-c                    depth(l_seg)=amax1(0.5,depth(l_seg))
-c                     depth(l_seg)=0.31122*(qavg**0.39848)
-c                     depth(l_seg)=amax1(0.5,depth(l_seg))
+                 dt(l_seg)=dx(l_seg)/u(l_seg)
 c
 c    Depth estimated with Leopold coefficients
 c 
-                     depth(l_seg)=D_a*(qavg**D_b)
-                     depth(l_seg)=amax1(D_min,depth(l_seg))
+                 depth(l_seg)=D_a*(qavg**D_b)
+                 depth(l_seg)=amax1(D_min,depth(l_seg))
 c
-                     lat_flow(l_seg)=qout(l_seg)-qin(l_seg)
-                  end do
+                 lat_flow(l_seg)=qout(l_seg)-qin(l_seg)
+               end do
 c
 c  Set the value of the tributary flow due to the reach, NR
 c
-                  q_trib(nr)=qout(l_seg)
-	         end do
+               q_trib(nr)=qout(l_seg)
+	     end do
 c
 c     Main stem inflows and outflows for each reach first
 c     Flows are cumulative and do not include tributaries if
 c     tributaries are downstream of the inflow junction
 c
-c
 c     Headwaters flow and temperature
-c
 c
  90            continue
 c
 c     Begin cycling through the reaches 
 c
-
                do nr=1,nreach
                   nc_head=segment_cell(nr,1)
                   T_smth(nr)=b_smooth*T_smth(nr)+a_smooth*dbt(nc_head)
@@ -457,10 +392,7 @@ c     computational interval
 c
 
                      if(dt_total.lt.dt_comp) then
-                        x_part(ns)=x_part(ns)
-     .				         +dx(segment_cell(nr,nx_part))
-
-c         DO ND=1,nd_year
+                        x_part(ns)=x_part(ns)+dx(segment_cell(nr,nx_part))
 c     If the particle has started upstream from the boundary point, give it
 c     the value of the boundary
 c
@@ -476,7 +408,6 @@ c
 c     Increment the segment counter if the total time is less than the
 c     computational interval
 c
-
                         nx_s=nx_s+1
                         nx_part=nx_part-1
                         dt_part(ns)=dt(segment_cell(nr,nx_part))
@@ -547,22 +478,19 @@ c     Now do the third-order interpolation to
 c     establish the starting temperature values
 c     for each parcel
 c
-
                      nseg=nstrt_elm(ns)
                      npndx=1
 c
 c     If starting element is the first one, then set
 c     the initial temperature to the boundary value
 c
-
-                     if(nseg.eq.1) then
+                     if (nseg.eq.1) then
                         t0=T_head(nr)
                         go to 350
                      end if
 c
 c     Perform polynomial interpolation
 c
-
                      do ntrp=1,nterp(npndx)
                         npart=nseg+ntrp+ndltp(npndx)-1
                         nptest(ntrp)=npart
@@ -584,53 +512,46 @@ c
 c
 c    Set NCELL0 for purposes of tributary input
 c
-
                      ncell0=nncell
                      dt_total=dt_calc
                      do nm=no_dt(ns),1,-1
-c
-
-	                  u_river=u(nncell)/3.2808
-                          z=depth(nncell)
-                          call energy
+                       u_river=u(nncell)/3.2808
+                       z=depth(nncell)
+                       call energy
      &                      (t0,QSURF,A,B,ncell)
-                            t_eq=-B/A
-                          qdot=qsurf/(z*rfac)
-                          t0=t0+qdot*dt_calc
-c                  else
-c                          t0=T_head(nr)
-c                  end if  
+                       t_eq=-B/A
+                       qdot=qsurf/(z*rfac)
+                       t0=t0+qdot*dt_calc  
 
-                        if(t0.lt.0.0) t0=0.0
- 400                    continue
+                       if(t0.lt.0.0) t0=0.0
+ 400                   continue
 c
 c     Look for a tributary.
 c 
-                        q1=qin(nncell)
+                       q1=qin(nncell)
 
-                        ntribs=no_tribs(nncell)
-                        if(ntribs.gt.0.and..not.DONE) then
-                           do ntrb=1,ntribs
-                              nr_trib=trib(nncell,ntrb)
-                              q2=q1+q_trib(nr_trib)
-                              t0=(q1*t0+q_trib(nr_trib)
-     .                              *T_trib(nr_trib))/q2
-                              q1=q1+q_trib(nr_trib)
+                       ntribs=no_tribs(nncell)
+                       if (ntribs.gt.0.and..not.DONE) then
+                         do ntrb=1,ntribs
+                           nr_trib=trib(nncell,ntrb)
+                           q2=q1+q_trib(nr_trib)
+                           t0=(q1*t0+q_trib(nr_trib)*T_trib(nr_trib))/q2
+                           q1=q1+q_trib(nr_trib)
 c
   450 continue
-                           end do
-                           DONE=.TRUE.
-                        end if
-                        t00=t0
-                        if(lat_flow(nncell).gt.0) then
+                         end do
+                         DONE=.TRUE.
+                       end if
+                       t00=t0
+                       if (lat_flow(nncell).gt.0) then
                           q1=0.5*(qin(nncell)+qout(nncell))
                           q2=q1+lat_flow(nncell)
 c
 c  Modified nonpoint source temperature so as to be the same
 c  as the instream simulated temperature for Connecticut River 7/2015
-                           T_dist=t0
-                           t0=(q1*t0+lat_flow(nncell)*T_dist)/q2
-                           dtlat=t0-t00
+                          T_dist=t0
+                          t0=(q1*t0+lat_flow(nncell)*T_dist)/q2
+                          dtlat=t0-t00
                         end if
  500                    continue
                         nseg=nseg+1
@@ -638,24 +559,20 @@ c  as the instream simulated temperature for Connecticut River 7/2015
 c
 c     Reset tributary flag is this is a new cell
 c
-
-                        if(ncell0.ne.nncell) then
+                        if (ncell0.ne.nncell) then
                            ncell0=nncell
                            DONE=.FALSE.
                         end if
                         dt_calc=dt(nncell)
                         dt_total=dt_total+dt_calc
-                     end do
-                     if (t0.lt.0.5) t0=0.5
+                      end do
+                      if (t0.lt.0.5) t0=0.5
                      temp(nr,ns,n2)=t0
 	             T_trib(nr)=t0
 c
 c   Write file 20 with all temperature output 11/19/2008
 c
-
-                     nsmod=mod(ns,2)
-
-                     
+                     nsmod=mod(ns,2)                    
                      if(nsmod.eq.1) then
                        rmile_plot=x_dist(nr,ns)/5280.
                        write(20,'(f11.5,1x,i4,1x,2i5,1x,4f7.2)') 
@@ -666,11 +583,9 @@ c
 c
 c     End of computational element loop
 c
-
                   end do
 c     End of reach loop
 c
-
                end do
                ntmp=n1
                n1=n2
@@ -717,17 +632,12 @@ c
       real*4 q_fit(2),T_fit(2),evrate
       INCLUDE 'RBM.fi'
       data evrate/1.5e-9/,pf/0.640/
-      parameter (pi=3.14159,Ksw=6.4e-03)
-c
-C     	Ksw based on formulation described in the Qual2KE Documentation
-C       Chapra, S.C., Pelletier, G.J. and Tao.H.2008,QUAL2K: A Modeling
-C       Framework Simulating River and Stream Water Quality, Version.211
-C
-      
-	td=nd
-	evap_rate=evrate
-        T_fit(1)=tsurf-0.5
-        T_fit(2)=tsurf+0.5
+      parameter (pi=3.14159)
+c     
+      td=nd
+      evap_rate=evrate
+      T_fit(1)=tsurf-0.5
+      T_fit(2)=tsurf+0.5
       do i=1,2
          E0=2.1718E8*EXP(-4157.0/(T_fit(i)+239.09))
          RB=PF*(DBT(ncell)-T_fit(i))
@@ -738,11 +648,7 @@ C
          QEVAP=QEVAP*(E0-EA(ncell))
          QWS=6.693E-2+1.471E-3*T_fit(i)
          q_fit(i)=QNS(ncell)+0.97*QNA(ncell)-QWS-QEVAP+QCONV
-c     &           -Ksw*(T_fit(i)-10.)
       end do
-c
-c     q=AT+B
-c
 
       A=(q_fit(1)-q_fit(2))/(T_fit(1)-T_fit(2))
       B=(T_fit(1)*q_fit(2)-T_fit(2)*q_fit(1))
@@ -753,7 +659,6 @@ C     ******************************************************
 C               Return to Subroutine RIVMOD
 C     ******************************************************
 C
-
       RETURN
       END
       function nodays(jtime,jy0)
