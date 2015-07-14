@@ -228,9 +228,9 @@ c
       RETURN
   900 END
       SUBROUTINE SYSTMM
-      real*4 xa(4),ta(4),T_head(5000),T_smth(5000)
-     *      ,dt_part(5000),x_part(5000)
-      integer no_dt(1000),nstrt_elm(5000)
+      real*4 xa(4),ta(4),T_head(1000),T_smth(1000)
+     *      ,dt_part(1000),x_part(1000)
+      integer no_dt(1000),nstrt_elm(1000)
      .     ,ndltp(4),nterp(4),nptest(4),ndmo(12,2)
       logical DONE
 
