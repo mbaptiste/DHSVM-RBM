@@ -54,15 +54,20 @@ c
 c     Open file with weather and inflow data
       write(*,*) 'Forcing file -  ', TRIM(Prefix)//'.forcing'
       open(unit=30,file=TRIM(Prefix)//'.forcing',STATUS='old')
+C
+c     open Mohseni file 
+      open(40,file=TRIM(Prefix)//'.Mohseni',STATUS='old')    
+c
+c     open Leopold file 
+      open(50,file=TRIM(Prefix)//'.Leopold',STATUS='old')    
 c
 c     Open network file
       OPEN(UNIT=90,FILE=TRIM(Prefix)//'.net',STATUS='OLD')
 c
 c     Read header information from control file
-      read(90,*)
-c
-c     Read name of file with forcing functions:<ProjectName>.forcing 
-      read(90,'(A)') forcing_file
+      do n=1,5
+        read(90,*)
+      end do
 c
 C     Call systems programs to get started
 C
@@ -88,23 +93,11 @@ C
       character*10 Dummy_A
       integer head_name,trib_cell,first_cell
       dimension ndmo(12)
+      logical Test
       INCLUDE 'RBM.fi'
       data ndmo/0,31,59,90,120,151,181,212,243,273,304,334/
       ndelta=2
       delta_n=ndelta
-C
-c     Mohseni parameters
-c
-      read(90,*) alf_Mu,beta,gmma,mu,a_smooth
-      b_smooth=1.- a_smooth
-c
-c     Leopold parameters for stream speed + minimum stream speed
-c
-      read(90,*) U_a,U_b,u_min
-c
-c     Leopold parameters for stream depth + minimum depth
-c
-      read(90,*) D_a,D_b,D_min
 c
 c     Read the starting and ending times and the number of
 c     periods per day of weather data from the forcing file
@@ -129,6 +122,11 @@ c
 c
       read(90,*) no_rch
       write(*,*) "Number of stream reaches - ",no_rch
+      read(40,*) Test,a_smooth
+      b_smooth=1.- a_smooth
+      do nr=1,no_rch
+        read(40,*) nnr,alf_Mu(nr),beta(nr),gmma(nr),mu(nr)
+      end do
 c
 c     Start reading the reach date and initialize the reach index, NR
 c     and the cell index, NCELL
@@ -172,6 +170,13 @@ c
 c
       do nc=1,no_cells(nreach)
         ncell=ncell+1
+        read(50,*) ncll,U_a(ncell),U_b(ncell),U_min(ncell)
+        if (ncll .ne.ncell) then
+          write(*,*) 'Mismatch in Leopold file'
+        end if  
+        read(50,*) D_a(ncell),D_b(ncell),D_min(ncell)
+        write(*,*) ' Starting to read reach ',nreach
+     &      ,U_a(ncell),U_b(ncell),U_min(ncell)
 
 c
 c     The headwaters index for each cell in this reach is given
@@ -223,9 +228,10 @@ c
       RETURN
   900 END
       SUBROUTINE SYSTMM
-      real*4 xa(4),ta(4),T_head(5000),T_smth(5000)
-     *      ,dt_part(5000),x_part(5000)
-      integer no_dt(1000),nstrt_elm(5000)
+      real*4 xa(4),ta(4),T_head(1000),T_smth(1000)
+     *      ,dt_part(1000),x_part(1000)
+      real*8 day_fract,hr_fract,sim_incr,year,prnt_time
+      integer no_dt(1000),nstrt_elm(1000)
      .     ,ndltp(4),nterp(4),nptest(4),ndmo(12,2)
       logical DONE
 
@@ -236,10 +242,10 @@ c
      &         ,0,31,60,91,121,152,182,213,244,274,305,335/
 c
 c
-      day_inc=1./nwpd
-      do nr=1,5000
-         T_head(nr)=mu
-         T_smth(nr)=mu
+      hour_inc=1./nwpd
+      do nr=1,1000
+         T_head(nr)=mu(nr)
+         T_smth(nr)=mu(nr)
       end do
       n1=1
       n2=2
@@ -264,6 +270,7 @@ c
         yr_days=366.
       end if
       day_fract=ndmo(start_month,lp_year)+start_day-1
+      write(*,*) 'day_fact day ',day_fract
       day_fract=day_fract/yr_days
       hr_fract=start_hour/(24.*yr_days)
       sim_incr=dt_comp/(365.*86400.)
@@ -271,7 +278,7 @@ c
       time=year+day_fract+hr_fract
 c
 c     Year loop starts
-      write(*,*) 'dt_comp',dt_comp
+      write(*,*) start_year,start_day,start_hour,time,day_fract,hr_fract
       do nyear=start_year,end_year
          write(*,*) ' Simulation Year - ',nyear
          nd_year=365
@@ -280,6 +287,7 @@ c     Year loop starts
            nd_year=366
            lp_year=2
          end if
+         xd_year=nd_year
 c
 c        Day loop starts
          if (nyear.eq.start_year) then
@@ -300,16 +308,15 @@ c     Start the numbers of days-to-date counter
            ndays=ndays+1
 c
 c     Daily period loop starts
-           DO ndd=nd_start,nwpd
-c
-c     Increment the time stamp
-             time=time+sim_incr 
+           DO ndd=nd_start,nwpd 
 c
 c     Begin reach computations
 c      
              ind=nd
              ipd=ndd
              day=nd
+             period=ndd
+             time=year+(day-1.+hour_inc*period)/xd_year
 c
 c     Read advected energy and meteorology data      
              l_seg = 0
@@ -319,17 +326,19 @@ c     Hardwire annual average temperature for headwaters
 c
                do nc=1,no_cells(nr)
                  l_seg=l_seg+1
-                 read(30,*,end=900) nn1
+                 read(30,*,end=900) l1
      &                      ,press(l_seg),dbt(l_seg)
      &                      ,qna(l_seg),qns(l_seg),ea(l_seg),wind(l_seg)
      &                      ,qin(l_seg),qout(l_seg)
-
+                 if (qin(l_seg) < 0.5) then
+                     qin(l_seg)=qout(l_seg)
+                 end if
                  qavg=0.5*(qin(l_seg)+qout(l_seg))
 c
 c    Stream speed estimated with Leopold coefficients
 c 
-                 u(l_seg)=U_a*(qavg**U_b) 
-                 u(l_seg) = amax1(u_min,u(l_seg))
+                 u(l_seg)=U_a(l_seg)*(qavg**U_b(l_seg)) 
+                 u(l_seg) = amax1(u_min(l_seg),u(l_seg))
 c 
                  qdiff(l_seg)=(qout(l_seg)-qin(l_seg))/delta_n
 c 
@@ -337,8 +346,8 @@ c
 c
 c    Depth estimated with Leopold coefficients
 c 
-                 depth(l_seg)=D_a*(qavg**D_b)
-                 depth(l_seg)=amax1(D_min,depth(l_seg))
+                 depth(l_seg)=D_a(l_seg)*(qavg**D_b(l_seg))
+                 depth(l_seg)=amax1(D_min(l_seg),depth(l_seg))
 c
                  lat_flow(l_seg)=qout(l_seg)-qin(l_seg)
                end do
@@ -361,8 +370,8 @@ c
                do nr=1,nreach
                   nc_head=segment_cell(nr,1)
                   T_smth(nr)=b_smooth*T_smth(nr)+a_smooth*dbt(nc_head)
-                  T_head(nr)=mu
-     &            +(alf_Mu/(1.+exp(gmma*(beta-T_smth(nr)))))
+                  T_head(nr)=mu(nr)
+     &            +(alf_Mu(nr)/(1.+exp(gmma(nr)*(beta(nr)-T_smth(nr)))))
 c                  
                   temp(nr,0,n1)=T_head(nr)
                   temp(nr,-1,n1)=T_head(nr)
@@ -392,7 +401,8 @@ c     computational interval
 c
 
                      if(dt_total.lt.dt_comp) then
-                        x_part(ns)=x_part(ns)+dx(segment_cell(nr,nx_part))
+                        x_part(ns)=x_part(ns)
+     .				         +dx(segment_cell(nr,nx_part))
 c     If the particle has started upstream from the boundary point, give it
 c     the value of the boundary
 c
@@ -572,27 +582,31 @@ c
 c
 c   Write file 20 with all temperature output 11/19/2008
 c
-                     nsmod=mod(ns,2)                    
-                     if(nsmod.eq.1) then
+                     nsmod=mod(ns,2)
+                     time=year+(day-1.+hour_inc*period)/xd_year
+                     if(nsmod.eq.0) then
                        rmile_plot=x_dist(nr,ns)/5280.
-                       write(20,'(f11.5,1x,i4,1x,2i5,1x,4f7.2)') 
-     &                       time,nd,ncell,ns,t0
+                       write(20,'(f11.5,i5,1x,i4,1x,2i5,1x,5f7.2,f9.2)') 
+     &                       time,nyear,nd,ncell,ns,t0
      &                      ,T_head(nr),dbt(ncell)
-     &                      ,depth(ncell)
+     &                      ,depth(ncell),u(ncell),qin(ncell)
+
                      end if
 c
 c     End of computational element loop
 c
+
                   end do
 c     End of reach loop
 c
+
                end do
                ntmp=n1
                n1=n2
                n2=ntmp
 c
 c     End of weather period loop (NDD=1,NWPD)
-c 
+c
             end do
 c
 c Reset daily loop counter
@@ -608,7 +622,6 @@ c
 c    Update initial time for new year
 c
       year=year+1
-      time=year
 c
 c     End of year loop
 c
