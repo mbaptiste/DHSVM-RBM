@@ -230,6 +230,10 @@ c
       SUBROUTINE SYSTMM
       real*4 xa(4),ta(4),T_head(1000),T_smth(1000)
      *      ,dt_part(1000),x_part(1000)
+<<<<<<< HEAD
+=======
+      real*8 day_fract,hr_fract,sim_incr,year,prnt_time
+>>>>>>> 914a082037507d84a52decdd3d07cf1e2c7af82c
       integer no_dt(1000),nstrt_elm(1000)
      .     ,ndltp(4),nterp(4),nptest(4),ndmo(12,2)
       logical DONE
@@ -400,7 +404,8 @@ c     computational interval
 c
 
                      if(dt_total.lt.dt_comp) then
-                        x_part(ns)=x_part(ns)+dx(segment_cell(nr,nx_part))
+                        x_part(ns)=x_part(ns)
+     .				         +dx(segment_cell(nr,nx_part))
 c     If the particle has started upstream from the boundary point, give it
 c     the value of the boundary
 c
@@ -581,10 +586,17 @@ c
 c   Write file 20 with all temperature output 11/19/2008
 c
                      nsmod=mod(ns,2)
+<<<<<<< HEAD
                      time=year+(day-1.+hour_inc*period)/xd_year                    
                      if(nsmod.eq.0) then
                        rmile_plot=x_dist(nr,ns)/5280.
                              write(20,'(f11.5,i5,1x,i4,1x,2i5,1x,5f7.2,f9.2)') 
+=======
+                     time=year+(day-1.+hour_inc*period)/xd_year
+                     if(nsmod.eq.0) then
+                       rmile_plot=x_dist(nr,ns)/5280.
+                       write(20,'(f11.5,i5,1x,i4,1x,2i5,1x,5f7.2,f9.2)') 
+>>>>>>> 914a082037507d84a52decdd3d07cf1e2c7af82c
      &                       time,nyear,nd,ncell,ns,t0
      &                      ,T_head(nr),dbt(ncell)
      &                      ,depth(ncell),u(ncell),qin(ncell)
@@ -593,20 +605,26 @@ c
 c
 c     End of computational element loop
 c
+
                   end do
 c     End of reach loop
 c
+
                end do
                ntmp=n1
                n1=n2
                n2=ntmp
 c
 c     End of weather period loop (NDD=1,NWPD)
+<<<<<<< HEAD
 c 
 c    Insert a blank line for GNUPLOT
 c 
 
             write(20,*)
+=======
+c
+>>>>>>> 914a082037507d84a52decdd3d07cf1e2c7af82c
             end do
 c
 c Reset daily loop counter
